@@ -1,0 +1,81 @@
+arch: "clip"
+test_name: "Ojha_blur2"
+
+eval_pipeline: utils.validate_plain
+#resume:
+#  path: '/home/jwang/ybwork/classifier/logs/ojha_progan_20240705_12_23_41/last.ckpt'
+#  target: utils.resume_tools.resume_lightning
+
+resume:
+  path: 'networks/weights/ojha_fc_weights.pth'
+  target: utils.resume_tools.resume_ojha
+
+
+
+datasets:
+#  base_path: "/scratch/yw26g23/datasets/df-arrow/"
+  base_path: "/home/jwang/ybwork/data/DF-arrow"
+  source:
+#    - { target: data.ArrowDatasets,
+#        data_root: '${datasets.base_path}/ForenSynths',
+#        sub_sets: [ "biggan", "crn", "cyclegan", "deepfake", "gaugan", "imle", "progan", "san", "seeingdark", "stargan",
+#                  "stylegan", "stylegan2", "whichfaceisreal"  ],
+#        split: 'test',
+#        benchmark_name: 'ForenSynths'}
+
+    - { target: data.ArrowDatasets,
+        data_root: '${datasets.base_path}/ForenSynths',
+        sub_sets: [ "biggan", "deepfake", "gaugan", "progan"  ],
+        split: 'test',
+        benchmark_name: 'ForenSynths'}
+
+    - { target: data.BinaryJsonDatasets,
+        data_root: '/home/jwang/ybwork/data/DFBenchmark/synthwildx',
+        sub_sets: ['dalle3', 'firefly', 'midjourney_v5'],
+        split: 'test',
+        benchmark_name: 'Synthwildx' }
+
+    - { target: data.BinaryJsonDatasets,
+        data_root: '/home/jwang/ybwork/data/DFBenchmark/synthbuster',
+        sub_sets: ['dalle2','firefly','stable-diffusion-1-4','stable-diffusion-xl', 'dalle3','glide','midjourney-v5',
+                    'stable-diffusion-1-3','stable-diffusion-2'],
+        split: 'test',
+        benchmark_name: 'Synthbuster' }
+
+#    - { target: data.ArrowDatasets,
+#        data_root: '${datasets.base_path}/DIF',
+#        sub_sets: [ 'dalle_2',  'dalle_mini',  'glide',  'mj',  'sd14',  'sd21', ],
+#        split: 'test',
+#        benchmark_name: 'DIF'}
+#
+#    - { target: data.BinaryJsonDatasets,
+#        data_root: '/home/jwang/ybwork/data/DFBenchmark/AIGCDetect',
+#        sub_sets: ['wukong', 'Midjourney', 'stable_diffusion_v_1_5', 'ADM',  'Glide','stable_diffusion_v_1_4', 'VQDM'],
+#        split: 'test',
+#        benchmark_name: 'GenImage' }
+
+  batch_size: 128
+  loader_workers: 32
+
+  trsf:
+#    - _target_: data.RandomCompress
+#      method: "JPEG"
+#      qf: [70, 100]
+#    - _target_: data.Compress
+#      method: "JPEG"
+#      qf: 30
+    - _target_: data.DataAugment
+      blur_prob: 1
+      blur_sig: [ 2, 2 ]
+      jpg_prob: 0
+      jpg_method: [ 'cv2', 'pil' ]
+      jpg_qual: [ 30, 100 ]
+#    - _target_: torchvision.transforms.Resize
+#      size: 256
+    - _target_: torchvision.transforms.CenterCrop
+      size: 224
+    - _target_: torchvision.transforms.ToTensor
+    - _target_: torchvision.transforms.Normalize
+      mean: [0.48145466, 0.4578275, 0.40821073]
+      std: [0.26862954, 0.26130258, 0.27577711]
+

@@ -1,0 +1,106 @@
+arch: "npr"
+test_name: "NPR_progan"
+# in the original repo, we can reproduce:
+#=================================
+#           ForenSynths
+#=================================
+#2024_07_06_12_36_30
+#(0 stylegan2   ) acc: 98.5; ap: 100.0
+#(1 biggan      ) acc: 84.4; ap: 87.8
+#(2 imle        ) acc: 50.0; ap: 50.0
+#(3 progan      ) acc: 99.8; ap: 100.0
+#(4 whichfaceisreal) acc: 66.3; ap: 94.9
+#(5 san         ) acc: 97.3; ap: 99.5
+#(6 gaugan      ) acc: 82.5; ap: 85.5
+#(7 crn         ) acc: 50.0; ap: 50.0
+#(8 stargan     ) acc: 99.3; ap: 99.9
+#(9 cyclegan    ) acc: 96.1; ap: 98.5
+#(10 stylegan    ) acc: 97.8; ap: 99.9
+#(11 seeingdark  ) acc: 63.1; ap: 88.7
+#(12 deepfake    ) acc: 77.6; ap: 80.0
+#(13 Mean      ) acc: 81.7; ap: 87.3
+# use this repo, we can also get the same results by official released weights
+# the retrained model by this repo, in line with their paper
+#biggan	0.7908	0.9012
+#crn	0.5001	0.5199    real fake all png
+#cyclegan	0.8660	0.9891
+#deepfake	0.5467	0.7584
+#gaugan	0.8482	0.8718
+#imle	0.5001	0.5199    real fake all png
+#progan	0.9974	1.0000
+#san	0.9795	0.9924
+#seeingdark	0.8778	0.9899
+#stargan	0.9992	1.0000
+#stylegan	0.8939	0.9930
+#stylegan2	0.9184	0.9994
+#whichfaceisreal	0.5285	0.9345
+#average	0.7882	0.8823
+
+
+eval_pipeline: utils.validate_plain
+resume:
+#  path: './logs/NPR_progan_20240705_21_38_58/last.ckpt'
+#  target: utils.resume_tools.resume_lightning
+  path: 'networks/weights/NPR.pth'
+  target: utils.resume_tools.resume_cnndet
+
+datasets:
+#  base_path: "/scratch/yw26g23/datasets/df-arrow/"
+  base_path: "/home/jwang/ybwork/data/DF-arrow"
+#  base_path: "/home/jwang/ybwork/data/DFBenchmark"
+
+  source:
+#    - { target: data.ArrowDatasets,
+#        data_root: '${datasets.base_path}/ForenSynths',
+#        sub_sets: [ "biggan", "crn", "cyclegan", "deepfake", "gaugan", "imle", "progan", "san", "seeingdark", "stargan",
+#                  "stylegan", "stylegan2", "whichfaceisreal"  ],
+#        split: 'test',
+#        benchmark_name: 'ForenSynths'}
+
+#    - { target: data.ArrowDatasets,
+#        data_root: '${datasets.base_path}/GANGen-Detection',
+#        sub_sets: [ "AttGAN", "BEGAN", "CramerGAN", "GANimation", "InfoMaxGAN", "MMDGAN", "RelGAN", "S3GAN", "SNGAN", "STGAN" ],
+#        split: 'test',
+#        benchmark_name: 'GANGen-Detection' }
+#
+#
+    - { target: data.ArrowDatasets,
+        data_root: '${datasets.base_path}/DIF',
+        sub_sets: [ 'dalle_2',  'dalle_mini',  'glide',  'mj',  'sd14',  'sd21', ],
+        split: 'test',
+        benchmark_name: 'DIF'}
+#
+#
+#    - { target: data.ArrowDatasets,
+#        data_root: '${datasets.base_path}/DiffusionForensics',
+#        sub_sets: [ 'imagenet_sdv1', 'imagenet_adm', 'lsun_bedroom_sdv1_new1', 'lsun_bedroom_sdv1_new2',
+#                  'lsun_bedroom_adm', 'lsun_bedroom_iddpm', 'lsun_bedroom_ddpm', 'lsun_bedroom_pndm',
+#                  'lsun_bedroom_sdv2', 'lsun_bedroom_ldm', 'lsun_bedroom_vqdiffusion', 'lsun_bedroom_if',
+#                  'lsun_bedroom_dalle2', 'lsun_bedroom_midjourney', 'celebahq_sdv2', 'celebahq_if',
+#                  'celebahq_dalle2', 'celebahq_midjourney' ],
+#        split: 'test',
+#        benchmark_name: 'DiffusionForensics' }
+#
+#    - { target: data.ArrowDatasets,
+#        data_root: '${datasets.base_path}/Ojha',
+#        sub_sets: [ "dalle", "glide_100_10", "glide_100_27", "glide_50_27", "guided", "ldm_100", "ldm_200", "ldm_200_cfg" ],
+#        split: 'test',
+#        benchmark_name: 'Ojha' }
+
+  batch_size: 1
+  loader_workers: 32
+
+  trsf:
+#    - _target_: data.RandomCompress
+#      method: "JPEG"
+#      qf: [90, 100]
+#    - _target_: torchvision.transforms.Resize
+#      size: 256
+    - _target_: torchvision.transforms.CenterCrop
+      size: 224
+    - _target_: torchvision.transforms.ToTensor
+    - _target_: torchvision.transforms.Normalize
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]
+
+

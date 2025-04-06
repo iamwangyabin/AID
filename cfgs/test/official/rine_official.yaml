@@ -1,0 +1,113 @@
+# This configuration can fully reproduce the RINE results on ForenSynths.
+# However, it cannot reproduce the results on SynthBuster (downloaded from https://github.com/grip-unina/ClipBased-SyntheticImageDetection/tree/main).
+arch: "rine"
+test_name: "RINE_official_resize"
+
+eval_pipeline: utils.validate_plain
+
+resume:
+  path: './networks/weights/rine_model_4class_trainable.pth'
+  target: utils.resume_tools.resume_rine
+
+model:
+  backbone0: "ViT-L/14"
+  backbone1: 1024
+  nproj: 2
+  proj_dim: 1024
+
+datasets:
+  base_path: "/home/jwang/ybwork/data/DF-arrow"
+  source:
+
+#    - { target: data.BinaryJsonDatasets,
+#        data_root: '/home/jwang/ybwork/data/DFBenchmark/synthbuster',
+#        sub_sets: ['dalle2','firefly','stable-diffusion-1-4','stable-diffusion-xl', 'dalle3','glide','midjourney-v5',
+#                    'stable-diffusion-1-3','stable-diffusion-2'],
+#        split: 'test',
+#        benchmark_name: 'Synthbuster' }
+#
+#    - { target: data.ArrowDatasets,
+#        data_root: '${datasets.base_path}/ForenSynths',
+#        sub_sets: [ "biggan", "crn", "cyclegan", "deepfake", "gaugan", "imle", "progan", "san", "seeingdark", "stargan",
+#                  "stylegan", "stylegan2", "whichfaceisreal"  ],
+#        split: 'test',
+#        benchmark_name: 'ForenSynths'}
+
+
+
+    - { target: data.BinaryJsonDatasets,
+        data_root: '/home/jwang/ybwork/data/DFBenchmark/synthwildx',
+        sub_sets: ['dalle3', 'firefly', 'midjourney_v5'],
+        split: 'test',
+        benchmark_name: 'GenImage' }
+
+    - { target: data.BinaryJsonDatasets,
+        data_root: '/home/jwang/ybwork/data/DFBenchmark/synthbuster',
+        sub_sets: ['dalle2','firefly','stable-diffusion-1-4','stable-diffusion-xl', 'dalle3','glide','midjourney-v5',
+                    'stable-diffusion-1-3','stable-diffusion-2'],
+        split: 'test',
+        benchmark_name: 'Synthbuster' }
+
+    - { target: data.ArrowDatasets,
+        data_root: '${datasets.base_path}/ForenSynths',
+        sub_sets: [ "biggan", "crn", "cyclegan", "deepfake", "gaugan", "imle", "progan", "san", "seeingdark", "stargan",
+                  "stylegan", "stylegan2", "whichfaceisreal"  ],
+        split: 'test',
+        benchmark_name: 'ForenSynths'}
+
+    - { target: data.ArrowDatasets,
+        data_root: '${datasets.base_path}/GANGen-Detection',
+        sub_sets: [ "AttGAN", "BEGAN", "CramerGAN", "GANimation", "InfoMaxGAN", "MMDGAN", "RelGAN", "S3GAN", "SNGAN", "STGAN" ],
+        split: 'test',
+        benchmark_name: 'GANGen-Detection' }
+
+    - { target: data.ArrowDatasets,
+        data_root: '${datasets.base_path}/DIF',
+        sub_sets: [ 'dalle_2',  'dalle_mini',  'glide',  'mj',  'sd14',  'sd21', ],
+        split: 'test',
+        benchmark_name: 'DIF'}
+
+    - { target: data.ArrowDatasets,
+        data_root: '${datasets.base_path}/DiffusionForensics',
+        sub_sets: [ 'lsun_bedroom_adm', 'lsun_bedroom_iddpm', 'lsun_bedroom_ddpm', 'lsun_bedroom_pndm',
+                  'lsun_bedroom_sdv2', 'lsun_bedroom_ldm', 'lsun_bedroom_vqdiffusion', 'lsun_bedroom_if',
+                  'lsun_bedroom_dalle2', 'lsun_bedroom_midjourney' ],
+        split: 'test',
+        benchmark_name: 'DiffusionForensics' }
+
+    - { target: data.ArrowDatasets,
+        data_root: '${datasets.base_path}/Ojha',
+        sub_sets: [ "dalle", "glide_100_10", "glide_100_27", "glide_50_27", "guided", "ldm_100", "ldm_200", "ldm_200_cfg" ],
+        split: 'test',
+        benchmark_name: 'Ojha' }
+
+    - { target: data.BinaryJsonDatasets,
+        data_root: '/home/jwang/ybwork/data/DFBenchmark/AIGCDetect',
+        sub_sets: ['wukong', 'Midjourney', 'stable_diffusion_v_1_5', 'ADM',  'Glide','stable_diffusion_v_1_4', 'VQDM'],
+        split: 'test',
+        benchmark_name: 'GenImage' }
+
+
+
+
+
+  batch_size: 64
+  loader_workers: 32
+
+  trsf:
+    - _target_: data.RandomCompress
+      method: "JPEG"
+      qf: [ 70, 100 ]
+    - _target_: torchvision.transforms.Resize
+      size: 256
+    - _target_: torchvision.transforms.CenterCrop
+      size: 224
+    - _target_: torchvision.transforms.ToTensor
+    - _target_: torchvision.transforms.Normalize
+      mean: [0.48145466, 0.4578275, 0.40821073]
+      std: [0.26862954, 0.26130258, 0.27577711]
+
+
+
+
+

@@ -1,0 +1,216 @@
+arch: "poundnet"
+resume: null
+name: "poundnet_ViTL_Progan"
+
+train:
+  pipeline: engine.poundnet_trainer
+
+  gpu_ids: [1]
+  seed: 38534
+  train_epochs: 1
+  gradient_accumulation_steps: 1
+  check_val_every_n_epoch: 1
+
+  a: 1
+  b: 1
+  c: 1
+
+  optimizer:
+    _target_: torch.optim.AdamW
+    _partial_: True
+    lr: 1e-4
+    weight_decay: 1e-3
+    betas: [ 0.9, 0.999 ]
+
+
+  scheduler:
+    _target_: torch.optim.lr_scheduler.CosineAnnealingLR
+    _partial_: True
+    T_max: ${train.train_epochs}
+
+model:
+  NAME: "ViT-L/14"
+  N_CTX_VISION: 16
+  N_CTX_TEXT: 16
+  CTX_INIT: False
+  PROMPT_DEPTH_VISION: 8
+  PROMPT_DEPTH_TEXT: 8
+  PROMPT_NUM_TEXT: 1
+
+
+datasets:
+  base_path: "/home/jwang/ybwork/data/DF-arrow"
+  train:
+    source:
+      - { target: data.ArrowDatasets,
+          data_root: '${datasets.base_path}/ForenSynths',
+          sub_sets: ["airplane", "bird", "bottle", "car", "chair", "diningtable", "horse", "person", "sheep", "train",
+                       "bicycle", "boat", "bus", "cat", "cow", "dog", "motorbike", "pottedplant", "sofa", "tvmonitor"],
+          split: 'train_binary' }
+    multicalss_names: ["airplane", "bird", "bottle", "car", "chair", "diningtable", "horse", "person", "sheep", "train",
+                       "bicycle", "boat", "bus", "cat", "cow", "dog", "motorbike", "pottedplant", "sofa", "tvmonitor"]
+    batch_size: 128
+    loader_workers: 32
+    trsf:
+      - _target_: torchvision.transforms.Resize
+        size: 256
+      - _target_: torchvision.transforms.RandomResizedCrop
+        size: 224
+      - _target_: torchvision.transforms.RandomHorizontalFlip
+      - _target_: data.DataAugment
+        blur_prob: 0.1
+        blur_sig: [ 0.0, 3.0 ]
+        jpg_prob: 0.1
+        jpg_method: [ 'cv2', 'pil' ]
+        jpg_qual: [ 60, 100 ]
+      - _target_: torchvision.transforms.ToTensor
+      - _target_: torchvision.transforms.Normalize
+        mean: [ 0.48145466, 0.4578275, 0.40821073 ]
+        std: [ 0.26862954, 0.26130258, 0.27577711 ]
+
+  val:
+    source:
+
+      - { target: data.ArrowDatasets,
+          data_root: '${datasets.base_path}/DIF',
+          sub_sets: [ 'dalle_2',  'dalle_mini',  'glide',  'mj',  'sd14',  'sd21', ],
+          split: 'test',
+          benchmark_name: 'DIF'}
+
+    batch_size: 128
+    loader_workers: 32
+    trsf:
+      - _target_: data.RandomCompress
+        method: "JPEG"
+        qf: [70, 100]
+      - _target_: torchvision.transforms.Resize
+        size: 256
+      - _target_: torchvision.transforms.CenterCrop
+        size: 224
+      - _target_: torchvision.transforms.ToTensor
+      - _target_: torchvision.transforms.Normalize
+        mean: [0.48145466, 0.4578275, 0.40821073]
+        std: [0.26862954, 0.26130258, 0.27577711]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#
+#datasets:
+#  train:
+#    target: data.BinaryJsonDatasets
+#    data_root: "/scratch/yw26g23/datasets/deepfakebenchmark/our"
+##    data_root: "/home/jwang/ybwork/data/DFBenchmark/ForenSynths"
+#
+#    sub_sets: ["all"]
+#
+#    split: 'train_binary'
+#    multicalss_names: [ "airplane", "bird", "bottle", "car", "chair", "diningtable", "horse", "person", "sheep", "train",
+#                        "bicycle", "boat", "bus", "cat", "cow", "dog", "motorbike", "pottedplant", "sofa", "tvmonitor" ]
+#    batch_size: 256
+#    loader_workers: 32
+#
+#    pollution_probability: 0.3
+#
+##    trsf:
+##      - _target_: torchvision.transforms.Resize
+##        size: 256
+##        interpolation: 3
+##      - _target_: torchvision.transforms.RandomResizedCrop
+##        size: 224
+##      - _target_: torchvision.transforms.RandomHorizontalFlip
+##      - _target_: data.DataAugment
+##        blur_prob: 0.1
+##        blur_sig: [0.0, 1.0]
+##        jpg_prob: 0.1
+##        jpg_method: ['cv2', 'pil']
+##        jpg_qual: [60, 100]
+##      - _target_: torchvision.transforms.ToTensor
+##      - _target_: torchvision.transforms.Normalize
+##        mean: [0.48145466, 0.4578275, 0.40821073]
+##        std: [0.26862954, 0.26130258, 0.27577711]
+#    trsf:
+#      - _target_: albumentations.ImageCompression
+#        quality_lower: 40
+#        quality_upper: 100
+#        p: 0.1
+#      - _target_: albumentations.HorizontalFlip
+#      - _target_: albumentations.GaussNoise
+#        var_limit: 1
+#        p: 0.1
+#      - _target_: albumentations.GaussianBlur
+#        blur_limit: 3
+#        p: 0.1
+#      - _target_: albumentations.MultiplicativeNoise
+#        p: 0.1
+#      - _target_: data.IsotropicResize
+#        min_side: 224
+#      - _target_: albumentations.PadIfNeeded
+#        min_height: 224
+#        min_width: 224
+#      - _target_: albumentations.RandomCrop
+#        height: 224
+#        width: 224
+#      - _target_: albumentations.RandomBrightnessContrast
+#        p: 0.1
+#      - _target_: albumentations.FancyPCA
+#        p: 0.1
+#      - _target_: albumentations.HueSaturationValue
+#        p: 0.1
+#      - _target_: albumentations.CoarseDropout
+#        p: 0.1
+#      - _target_: albumentations.ToGray
+#        p: 0.1
+#      - _target_: albumentations.ToSepia
+#        p: 0.05
+#      - _target_: albumentations.RandomShadow
+#        p: 0.05
+#      - _target_: albumentations.RandomGamma
+#        p: 0.1
+#      - _target_: albumentations.ShiftScaleRotate
+#        shift_limit: 0.1
+#        scale_limit: 0.2
+#        rotate_limit: 180
+#        p: 0.2
+#      - _target_: albumentations.Normalize
+#        mean: [0.485, 0.456, 0.406]
+#        std: [0.229, 0.224, 0.225]
+#        p: 1.0
+#      - _target_: albumentations.pytorch.transforms.ToTensorV2
+#
+#  val:
+#    target: data.BinaryJsonDatasets
+#    data_root: "/scratch/yw26g23/datasets/deepfakebenchmark/ForenSynths"
+##    data_root: "/home/jwang/ybwork/data/DFBenchmark/ForenSynths"
+#    sub_sets: [ "biggan", "crn", "cyclegan", "deepfake", "gaugan", "imle", "progan", "san", "seeingdark", "stargan",
+#                "stylegan", "stylegan2", "whichfaceisreal" ]
+#    split: 'test'
+#    batch_size: 128
+#    loader_workers: 32
+#    trsf:
+#      - _target_: data.RandomCompress
+#        method: "JPEG"
+#        qf: [70, 100]
+#      - _target_: torchvision.transforms.Resize
+#        size: 256
+#        interpolation: 3
+#      - _target_: torchvision.transforms.RandomResizedCrop
+#        size: 224
+#      - _target_: torchvision.transforms.ToTensor
+#      - _target_: torchvision.transforms.Normalize
+#        mean: [0.48145466, 0.4578275, 0.40821073]
+#        std: [0.26862954, 0.26130258, 0.27577711]
+
+

@@ -1,0 +1,52 @@
+arch: "swin_base_patch4_window7_224.ms_in22k_ft_in1k"
+test_name: "test"
+
+eval_pipeline: utils.validate_plain
+resume:
+  path: 'networks/weights/SwinDCTfull_checkpoint32.pth'
+  target: utils.resume_tools.resume_timm
+
+datasets:
+#  base_path: "/scratch/yw26g23/data/DF-arrow"
+  base_path: "/home/jwang/ybwork/data/DF-arrow"
+  source:
+
+    - { target: data.ArrowDatasets,
+        data_root: '${datasets.base_path}/synthbuster',
+        sub_sets: ['dalle2','firefly','stable-diffusion-1-4','stable-diffusion-xl', 'dalle3','glide','midjourney-v5',
+                    'stable-diffusion-1-3','stable-diffusion-2'],
+        split: 'test',
+        benchmark_name: 'Synthbuster' }
+
+    - { target: data.ArrowDatasets,
+        data_root: '${datasets.base_path}/DIF',
+        sub_sets: [ 'dalle_2',  'dalle_mini',  'glide',  'mj',  'sd14',  'sd21', ],
+        split: 'test',
+        benchmark_name: 'DIF'}
+
+
+  batch_size: 128
+  loader_workers: 32
+
+  trsf:
+    - _target_: data.RandomCompress
+      method: "JPEG"
+      qf: [70, 100]
+    - _target_: torchvision.transforms.Resize
+      size: 256
+    - _target_: torchvision.transforms.CenterCrop
+      size: 224
+    - _target_: torchvision.transforms.ToTensor
+#    - _target_: albumentations.ImageCompression
+#      quality_lower: 70
+#      quality_upper: 100
+#      p: 1
+#    - _target_: data.IsotropicResize
+#      min_side: 224
+#    - _target_: albumentations.PadIfNeeded
+#      min_height: 224
+#      min_width: 224
+#    - _target_: albumentations.RandomCrop
+#      height: 224
+#      width: 224
+#    - _target_: albumentations.pytorch.transforms.ToTensorV2
