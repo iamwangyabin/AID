@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
+from engine.base_trainer import Trainer
 
 
 class SupConLoss(nn.Module):

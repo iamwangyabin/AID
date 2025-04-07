@@ -14,8 +14,8 @@ from lightning.pytorch.callbacks import ModelCheckpoint
 
 import engine
 import data
-import utils
-from utils.util import load_config_with_cli, archive_files, seed_everything
+import networks
+from utils.common import load_config_with_cli, archive_files, seed_everything
 
 import setproctitle
 setproctitle.setproctitle(f"python")

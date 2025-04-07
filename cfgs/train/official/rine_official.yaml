@@ -1,7 +1,7 @@
 # Same data augmentation and hyperparameters (best results) used in the paper
 # only except learning reate scheduler, it seems that in the original repo they have many epoch settings and use step lr scheduler
 # however, the best parameter use 1 epoch, so there is no difference using CosineAnnealingLr or StepLr;
-arch: "rine"
+arch: "RINEModel"
 name: "rine_progan"
 
 model:
@@ -31,7 +31,7 @@ train:
 
 
 datasets:
-  base_path: "/home/jwang/ybwork/data/DFBenchmark/"
+  base_path: "/data/yabin/DF-arrow-data"
   train:
     source:
       - { target: data.ArrowDatasets,

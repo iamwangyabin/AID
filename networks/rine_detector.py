@@ -20,13 +20,29 @@ class Hook:
 
 @MODELS.register_module()
 class RINEModel(nn.Module):
-    def __init__(
-        self,
-        backbone,
-        nproj,
-        proj_dim,
-    ):
+    def __init__(self, **kwargs):
         super().__init__()
+
+        # Support nested 'model' dict or flat kwargs
+        model_conf = kwargs.get('model', kwargs)
+
+        # Compose 'backbone' tuple
+        if 'backbone0' in model_conf and 'backbone1' in model_conf:
+            backbone = (model_conf['backbone0'], model_conf['backbone1'])
+        else:
+            raise ValueError("RINEModel requires 'backbone0' and 'backbone1' in model config")
+
+        # Extract 'nproj'
+        if 'nproj' in model_conf:
+            nproj = model_conf['nproj']
+        else:
+            raise ValueError("RINEModel requires 'nproj' parameter")
+
+        # Extract 'proj_dim'
+        if 'proj_dim' in model_conf:
+            proj_dim = model_conf['proj_dim']
+        else:
+            raise ValueError("RINEModel requires 'proj_dim' parameter")
 
         # Load and freeze CLIP
         self.clip, self.preprocess = clip.load(backbone[0], device="cpu")

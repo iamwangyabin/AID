@@ -16,6 +16,9 @@ AID is a comprehensive toolbox and benchmark suite for detecting AI-generated (s
 
 
 Support methods:
+注意当前仓库正在重构，目前经过验证能运行的是RINE，其余方法都需要debug
+
+
 
 |    Model Name     | Train | Test |
 |:-----------------:|:----:|:----:|
@@ -38,10 +41,12 @@ Support methods:
 |     AIDE     |   ✘   |  ✔   |
 
 
-
-
-
 Support datasets:
+在国内请用https://hf-mirror.com/ 代理后，执行类似方法进行数据集下载：
+huggingface-cli download nebula/DF-arrow --repo-type dataset --local-dir /path/to/your/local/directory --local-dir-use-symlinks False
+
+
+
 
 
 

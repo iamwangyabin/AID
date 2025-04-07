@@ -27,7 +27,6 @@ def resume_cnndet(model, weight_path):
     model.load_state_dict(state_dict['model'])
 
 
-
 def resume_rine(model, weight_path):
     state_dict = torch.load(weight_path, map_location='cpu')
     for name in state_dict:

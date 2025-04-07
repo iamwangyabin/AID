@@ -1,4 +1,6 @@
 
+
+
 #### CNNDet
 CNN-generated images are surprisingly easy to spot...for now	
 https://github.com/peterwang512/CNNDetection

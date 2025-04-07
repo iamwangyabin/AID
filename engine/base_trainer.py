@@ -5,7 +5,7 @@ import lightning as L
 from utils.validate import validate
 from utils.network_factory import get_model
 
-
+ 
 class Trainer(L.LightningModule):
     def __init__(self, opt):
         super().__init__()
