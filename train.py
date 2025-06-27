@@ -17,8 +17,6 @@ import data
 import networks
 from utils.common import load_config_with_cli, archive_files, seed_everything
 
-import setproctitle
-setproctitle.setproctitle(f"python")
 
 
 def build_dataloader(conf):
@@ -60,6 +58,13 @@ if __name__ == '__main__':
     today_str = conf.name +"_"+ datetime.datetime.now().strftime('%Y%m%d_%H_%M_%S')
     wandb_logger = WandbLogger(name=today_str, project='DeepfakeDetection',
                                job_type='train', group=conf.name)
+
+    # Conditionally sync with swanlab if available
+    try:
+        import swanlab
+        swanlab.sync_wandb()
+    except ImportError:
+        pass
 
     if os.getenv("LOCAL_RANK", '0') == '0':
         archive_files(today_str, exclude_dirs=['logs', 'wandb', '.git', 'exp_results'])

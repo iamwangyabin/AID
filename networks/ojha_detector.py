@@ -1,8 +1,9 @@
-from networks.clip import clip
+import clip
 import os
 import torch
 import torch.nn as nn
 
+from utils.registry import MODELS
 
 CHANNELS = {
     "RN50" : 1024,
@@ -11,9 +12,10 @@ CHANNELS = {
     "ViT-L/14@336px": 768,
 }
 
-class CLIPModel(nn.Module):
-    def __init__(self, name, num_classes=1):
-        super(CLIPModel, self).__init__()
+@MODELS.register_module()
+class OjhaModel(nn.Module):
+    def __init__(self, name="ViT-L/14", num_classes=1):
+        super(OjhaModel, self).__init__()
 
         self.model, self.preprocess = clip.load(name, device="cpu")
         for param in self.model.parameters():
