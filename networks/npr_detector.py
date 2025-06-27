@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
 from torch.nn import functional as F
-
+from utils.registry import MODELS
 
 def conv3x3(in_planes, out_planes, stride=1):
     """3x3 convolution with padding"""
@@ -173,7 +173,7 @@ def resnet50(pretrained=False, **kwargs):
         model.load_state_dict(model_zoo.load_url(model_urls['resnet50']))
     return model
 
-
+@MODELS.register_module()
 class NPRModel(nn.Module):
     def __init__(self, num_classes=1):
         super(NPRModel, self).__init__()

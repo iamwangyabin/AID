@@ -1,4 +1,5 @@
 from .rine_detector import RINEModel
 from .ojha_detector import OjhaModel
+from .npr_detector import NPRModel
 
-__all__ = ['RINEModel', 'OjhaModel']
+__all__ = ['RINEModel', 'OjhaModel', 'NPRModel']
