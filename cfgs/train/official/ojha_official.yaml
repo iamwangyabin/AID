@@ -1,11 +1,11 @@
-arch: "clip"
+arch: "OjhaModel"
 name: "ojha_progan"
 
 train:
   pipeline: engine.base_trainer
 
   gpu_ids: [0]
-  train_epochs: 100
+  train_epochs: 10
   check_val_every_n_epoch: 1
   seed: 1995
   optimizer:
@@ -21,8 +21,7 @@ train:
     T_max: ${train.train_epochs}
 
 datasets:
-  base_path: "/home/jwang/ybwork/data/DF-arrow"
-
+  base_path: "/home/yabin/DataDrive/DF-arrow-data"
   train:
     source:
       - { target: data.ArrowDatasets,
@@ -31,8 +30,8 @@ datasets:
                       "bicycle", "boat", "bus", "cat", "cow", "dog", "motorbike", "pottedplant", "sofa", "tvmonitor" ],
           split: 'train_binary' }
 
-    batch_size: 256
-    loader_workers: 32
+    batch_size: 128
+    loader_workers: 16
     trsf:
       - _target_: torchvision.transforms.Resize
         size: 256
@@ -59,7 +58,7 @@ datasets:
           benchmark_name: 'DIF' }
 
     batch_size: 128
-    loader_workers: 32
+    loader_workers: 16
     trsf:
       - _target_: torchvision.transforms.Resize
         size: 256

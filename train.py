@@ -62,6 +62,7 @@ if __name__ == '__main__':
     # Conditionally sync with swanlab if available
     try:
         import swanlab
+        os.environ["WANDB_MODE"]="offline"
         swanlab.sync_wandb()
     except ImportError:
         pass
