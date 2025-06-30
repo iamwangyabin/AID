@@ -82,10 +82,8 @@ if __name__ == '__main__':
     torch.set_float32_matmul_precision('high')
     trainer = L.Trainer(logger=wandb_logger, max_epochs=conf.train.train_epochs, accelerator="gpu", devices=conf.train.gpu_ids,
                         callbacks=[checkpoint_callback],
-                        # val_check_interval=1,
-                        # limit_train_batches=0.1,
                         check_val_every_n_epoch=conf.train.check_val_every_n_epoch,
-                        precision="16")
+                        precision=conf.train.get('precision', "16"))
 
     trainer.fit(model=model, train_dataloaders=train_loader, val_dataloaders=val_loader)
 

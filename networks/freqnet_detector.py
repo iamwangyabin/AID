@@ -4,7 +4,6 @@ import torch
 
 from utils.registry import MODELS
 
-__all__ = ['FreqNet, freqnet']
 
 
 def conv3x3(in_planes, out_planes, stride=1):
@@ -260,7 +259,4 @@ class FreqNet(nn.Module):
         x = self.fc1(x)
         return {'logits': x}
 
-
-def freqnet(**kwargs):
-    return FreqNet()
 

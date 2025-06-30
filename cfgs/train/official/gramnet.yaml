@@ -47,6 +47,7 @@ datasets:
         mean: [ 0.48145466, 0.4578275, 0.40821073 ]
         std: [ 0.26862954, 0.26130258, 0.27577711 ]
 
+
   val:
     source:
       - { target: data.ArrowDatasets,
@@ -58,12 +59,18 @@ datasets:
     batch_size: 128
     loader_workers: 16
     trsf:
+      - _target_: data.RandomCompress
+        method: "JPEG"
+        qf: [70, 100]
       - _target_: torchvision.transforms.CenterCrop
         size: 224
       - _target_: torchvision.transforms.ToTensor
       - _target_: torchvision.transforms.Normalize
         mean: [0.48145466, 0.4578275, 0.40821073]
         std: [0.26862954, 0.26130258, 0.27577711]
+
+
+
 
 
 
