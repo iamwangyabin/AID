@@ -1,6 +1,6 @@
-arch: "cnn"
+arch: "CNNDet"
 resume: null
-name: "cnndet01_progan"
+name: "CNNDet01_progan"
 
 train:
   pipeline: engine.base_trainer
@@ -9,7 +9,7 @@ train:
   train_epochs: 100
   gradient_accumulation_steps: 1
   check_val_every_n_epoch: 1
-
+  seed: 1995
   optimizer:
     _target_: torch.optim.AdamW
     _partial_: True
@@ -22,13 +22,17 @@ train:
     T_max: 100
 
 datasets:
+  base_path: "/home/yabin/DataDrive/DF-arrow-data"
   train:
-    data_root: "/scratch/yw26g23/datasets/deepfakebenchmark/ForenSynths"
-    sub_sets: ["airplane", "bird", "bottle", "car", "chair", "diningtable", "horse", "person", "sheep", "train",
-               "bicycle", "boat", "bus", "cat", "cow", "dog", "motorbike", "pottedplant", "sofa", "tvmonitor"]
-    split: 'train_binary'
-    batch_size: 256
-    loader_workers: 32
+    source:
+      - { target: data.ArrowDatasets,
+          data_root: '${datasets.base_path}/ForenSynths',
+          sub_sets: [ "airplane", "bird", "bottle", "car", "chair", "diningtable", "horse", "person", "sheep", "train",
+                      "bicycle", "boat", "bus", "cat", "cow", "dog", "motorbike", "pottedplant", "sofa", "tvmonitor" ],
+          split: 'train_binary' }
+
+    batch_size: 128
+    loader_workers: 16
     trsf:
       - _target_: torchvision.transforms.Resize
         size: 256
@@ -48,23 +52,27 @@ datasets:
 
 
   val:
-    data_root: "/scratch/yw26g23/datasets/deepfakebenchmark/ForenSynths"
-    sub_sets: [ "biggan", "crn", "cyclegan", "deepfake", "gaugan", "imle", "progan", "san", "seeingdark", "stargan",
-                "stylegan", "stylegan2", "whichfaceisreal" ]
-    split: 'test'
-    batch_size: 128
-    loader_workers: 32
+    source:
+      - { target: data.ArrowDatasets,
+          data_root: '${datasets.base_path}/DIF',
+          sub_sets: [ 'dalle_2',  'dalle_mini',  'glide',  'mj',  'sd14',  'sd21'],
+          split: 'test',
+          benchmark_name: 'DIF' }
+
+    batch_size: 64
+    loader_workers: 16
     trsf:
       - _target_: data.RandomCompress
         method: "JPEG"
         qf: [70, 100]
-      - _target_: torchvision.transforms.Resize
-        size: 256
-        interpolation: 3
-      - _target_: torchvision.transforms.RandomResizedCrop
+      - _target_: torchvision.transforms.CenterCrop
         size: 224
       - _target_: torchvision.transforms.ToTensor
       - _target_: torchvision.transforms.Normalize
-        mean: [ 0.485, 0.456, 0.406 ]
-        std: [ 0.229, 0.224, 0.225 ]
+        mean: [0.48145466, 0.4578275, 0.40821073]
+        std: [0.26862954, 0.26130258, 0.27577711]
+
+
+
+
 
