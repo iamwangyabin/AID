@@ -58,7 +58,6 @@ def calculate_acc_auc_f1(y_true, y_pred, thres):
     return r_acc, f_acc, acc, auc, f1, ap
 
 
-
 def validate_plain(model, loader):
     with torch.no_grad():
         y_true, y_pred, y_logits = [], [], []
@@ -76,7 +75,6 @@ def validate_plain(model, loader):
     result_dict = { 'ap': ap, 'auc': auc, 'f1': f1, 'r_acc0': r_acc0, 'f_acc0': f_acc0, 'acc0': acc0,
         'num_real': num_real, 'num_fake': num_fake, 'y_true': y_true, 'y_pred': y_pred, 'y_logits': y_logits }
     return result_dict
-
 
 
 def validate_multicls(model, loader):

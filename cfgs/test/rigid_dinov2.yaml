@@ -1,0 +1,42 @@
+arch: "RIGIDModel"
+test_name: "RIGID_DINOv2_zero_shot"
+
+eval_pipeline: utils.validate_plain
+
+# zero-shot method, no checkpoint needed
+resume:
+  path: null
+  target: torch.load
+
+model:
+  model_name: "facebook/dinov2-base"
+  noise_level: 0.02
+  threshold: 0.02
+  temperature: 0.01
+  num_noise_samples: 1
+
+  # preprocessing happens inside forward() (strategy2)
+  resize_shorter_edge: 256
+  crop_size: 224
+  interpolation: "bicubic"
+
+datasets:
+  # NOTE: change this to your local dataset root
+  base_path: "/data/DF-arrow"
+  source:
+    - { target: data.ArrowDatasets,
+        data_root: '${datasets.base_path}/ForenSynths',
+        sub_sets: [ "progan" ],
+        split: 'test',
+        benchmark_name: 'ForenSynths' }
+
+  batch_size: 32
+  loader_workers: 8
+
+  trsf:
+    # IMPORTANT: do NOT Normalize here. RIGIDModel will normalize by DINOv2 stats internally.
+    - _target_: torchvision.transforms.Resize
+      size: 256
+    - _target_: torchvision.transforms.CenterCrop
+      size: 224
+    - _target_: torchvision.transforms.ToTensor
