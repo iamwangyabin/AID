@@ -1,0 +1,56 @@
+arch: "SDv14CriterionModel"
+test_name: "SDv14_Criterion_training_free"
+
+eval_pipeline: utils.validate_plain
+
+# training-free method, no checkpoint needed
+resume:
+  path: null
+  target: torch.load
+
+model:
+  # main hyper-params from your reference implementation
+  siz: 512
+  num_noise: 8
+  time_frac: 0.01
+  epsilon_reg: 1e-8
+
+  # calibrate logits = (criterion - threshold) / temperature
+  # NOTE: criterion is usually around ~1.x; tune if you want sigmoid>0.5 thresholding to be meaningful
+  threshold: 1.0
+  temperature: 0.1
+
+  # models
+  sd_model_id: "CompVis/stable-diffusion-v1-4"
+  clip_model_id: "openai/clip-vit-large-patch14"
+
+  # captioning:
+  # - if you want to avoid loading LLaVA, set caption_model_id: null and provide prompts.
+  caption_model_id: "llava-hf/llava-1.5-7b-hf"
+  # prompts: ["a photo of ..."]  # (optional) single prompt for all images, or one per image batch
+  return_terms: false
+  verbose: false
+  lazy_init: true
+  max_vae_decode_batch: 16
+  caption_max_new_tokens: 76
+
+datasets:
+  # NOTE: change this to your local dataset root
+  base_path: "/data/DF-arrow"
+  source:
+    - { target: data.ArrowDatasets,
+        data_root: '${datasets.base_path}/ForenSynths',
+        sub_sets: [ "progan" ],
+        split: 'test',
+        benchmark_name: 'ForenSynths' }
+
+  batch_size: 1
+  loader_workers: 4
+
+  trsf:
+    # IMPORTANT: do NOT Normalize here. SDv14CriterionModel will do its own SD/CLIP preprocessing.
+    - _target_: torchvision.transforms.Resize
+      size: 512
+    - _target_: torchvision.transforms.CenterCrop
+      size: 512
+    - _target_: torchvision.transforms.ToTensor

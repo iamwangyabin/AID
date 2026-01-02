@@ -1,0 +1,51 @@
+arch: "WaRPADModel"
+test_name: "WaRPAD_DINOv2_zero_shot"
+
+eval_pipeline: utils.validate_plain
+
+# zero-shot method, no checkpoint needed
+resume:
+  path: null
+  target: torch.load
+
+model:
+  # torch.hub dinov2 model name
+  dino_model: "dinov2_vitl14"
+
+  # preprocessing happens inside forward(): resize to prep_size and ImageNet normalize
+  prep_size: 896
+  patch_size: 224
+
+  # wavelet HF perturbation strength
+  noise_level: 0.1
+
+  # calibration for logits = (score - threshold)/temperature, where score = 1 - mean_cosine_similarity
+  threshold: 0.02
+  temperature: 0.01
+
+  # wavelet config
+  wavelet_J: 2
+  wave: "haar"
+
+  interpolation: "bicubic"
+
+datasets:
+  # NOTE: change this to your local dataset root
+  base_path: "/data/DF-arrow"
+  source:
+    - { target: data.ArrowDatasets,
+        data_root: '${datasets.base_path}/ForenSynths',
+        sub_sets: [ "progan" ],
+        split: 'test',
+        benchmark_name: 'ForenSynths' }
+
+  batch_size: 32
+  loader_workers: 8
+
+  trsf:
+    # IMPORTANT: do NOT Normalize here. WaRPADModel will normalize by ImageNet stats internally.
+    - _target_: torchvision.transforms.Resize
+      size: 896
+    - _target_: torchvision.transforms.CenterCrop
+      size: 896
+    - _target_: torchvision.transforms.ToTensor
