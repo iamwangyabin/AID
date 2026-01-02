@@ -7,7 +7,7 @@ from .cnndet import CNNDet
 from .HIFI_Net.HiFi_Net import HiFi_Net
 from .rigid_detector import RIGIDModel
 from .warpad_detector import WaRPADModel
-from .sdv14_detector import SDv14CriterionModel
+from .sdv14_detector import ManifoldInducedBiases
 
 __all__ = [
     'RINEModel',
@@ -19,5 +19,5 @@ __all__ = [
     'HiFi_Net',
     'RIGIDModel',
     'WaRPADModel',
-    'SDv14CriterionModel',
+    'ManifoldInducedBiases',
 ]

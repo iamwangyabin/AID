@@ -1,4 +1,4 @@
-arch: "SDv14CriterionModel"
+arch: "ManifoldInducedBiases"
 test_name: "SDv14_Criterion_training_free"
 
 eval_pipeline: utils.validate_plain
@@ -48,7 +48,7 @@ datasets:
   loader_workers: 4
 
   trsf:
-    # IMPORTANT: do NOT Normalize here. SDv14CriterionModel will do its own SD/CLIP preprocessing.
+    # IMPORTANT: do NOT Normalize here. ManifoldInducedBiases will do its own SD/CLIP preprocessing.
     - _target_: torchvision.transforms.Resize
       size: 512
     - _target_: torchvision.transforms.CenterCrop

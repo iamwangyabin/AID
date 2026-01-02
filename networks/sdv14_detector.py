@@ -8,29 +8,11 @@ import torch.nn.functional as F
 
 from utils.registry import MODELS
 
-try:
-    import numpy as np
-except Exception as e:  # pragma: no cover
-    np = None  # type: ignore
-
-try:
-    from PIL import Image
-except Exception as e:  # pragma: no cover
-    Image = None  # type: ignore
-
-try:
-    from diffusers import DDPMScheduler, StableDiffusionPipeline
-except Exception as e:  # pragma: no cover
-    DDPMScheduler = None  # type: ignore
-    StableDiffusionPipeline = None  # type: ignore
-
-try:
-    from transformers import AutoImageProcessor, CLIPModel
-    from transformers import pipeline as hf_pipeline
-except Exception as e:  # pragma: no cover
-    AutoImageProcessor = None  # type: ignore
-    CLIPModel = None  # type: ignore
-    hf_pipeline = None  # type: ignore
+import numpy as np
+from PIL import Image
+from diffusers import DDPMScheduler, StableDiffusionPipeline
+from transformers import AutoImageProcessor, CLIPModel
+from transformers import pipeline as hf_pipeline
 
 
 def _normalize_batch(batch: torch.Tensor, epsilon: float = 1e-8) -> torch.Tensor:
@@ -75,9 +57,6 @@ def _postprocess_to_uint8_hwc(x: torch.Tensor, size: int, interpolation: str = "
     x: [B,3,H,W] in (approximately) [-1,1]
     returns: uint8 numpy [B,size,size,3]
     """
-    if np is None:
-        raise ImportError("numpy is required for SDv14CriterionModel postprocessing.")
-
     if do_resize:
         x = _resize_then_center_crop(x, size=size, interpolation=interpolation)
 
@@ -90,9 +69,6 @@ def _postprocess_to_uint8_hwc(x: torch.Tensor, size: int, interpolation: str = "
 
 def _numpy_chunk_first_dim(arr: "np.ndarray", num_chunks: int) -> List["np.ndarray"]:
     """Split a numpy array into `num_chunks` chunks along axis=0, keeping approximate equality."""
-    if np is None:
-        raise ImportError("numpy is required for SDv14CriterionModel chunking.")
-
     chunk_size = arr.shape[0] // num_chunks
     remainder = arr.shape[0] % num_chunks
     indices = np.cumsum([0] + [chunk_size + 1 if i < remainder else chunk_size for i in range(num_chunks)])
@@ -100,18 +76,16 @@ def _numpy_chunk_first_dim(arr: "np.ndarray", num_chunks: int) -> List["np.ndarr
 
 
 def _to_pil(img_uint8_hwc: torch.Tensor) -> "Image.Image":
-    if Image is None:
-        raise ImportError("PIL is required for SDv14CriterionModel.")
-    if img_uint8_hwc.dtype != torch.uint8:
-        raise ValueError("Expected uint8 HWC tensor for PIL conversion.")
     arr = img_uint8_hwc.detach().cpu().numpy()
     return Image.fromarray(arr, mode="RGB")
 
 
 @MODELS.register_module()
-class SDv14CriterionModel(nn.Module):
+class ManifoldInducedBiases(nn.Module):
     """
     Training-free detector based on Stable Diffusion v1.4 denoiser behavior + CLIP geometry.
+
+    Method name: Manifold Induced Biases
 
     Interface:
       - forward(x) returns dict with key 'logits' so it works with [`utils.validate_plain()`](utils/validate.py:61).
@@ -183,27 +157,9 @@ class SDv14CriterionModel(nn.Module):
             # Initialize on CPU; will move when `.cuda()` called and/or in forward().
             self._lazy_init(device=torch.device("cpu"))
 
-    def _require_deps(self) -> None:
-        if StableDiffusionPipeline is None or DDPMScheduler is None:
-            raise ImportError(
-                "Missing dependency `diffusers`. Please install diffusers, accelerate, safetensors.\n"
-                "Example: pip install diffusers accelerate safetensors"
-            )
-        if AutoImageProcessor is None or CLIPModel is None:
-            raise ImportError(
-                "Missing dependency `transformers`. Please install transformers.\n"
-                "Example: pip install transformers"
-            )
-        if np is None:
-            raise ImportError("Missing dependency `numpy`.")
-        if Image is None:
-            raise ImportError("Missing dependency `Pillow`.")
-
     def _lazy_init(self, device: torch.device) -> None:
         if self._initialized:
             return
-
-        self._require_deps()
 
         torch_dtype = torch.float16 if device.type == "cuda" else torch.float32
 
@@ -332,15 +288,6 @@ class SDv14CriterionModel(nn.Module):
         """
         device = x.device
         self._lazy_init(device=device)
-
-        assert self.unet is not None
-        assert self.vae is not None
-        assert self.text_encoder is not None
-        assert self.tokenizer is not None
-        assert self.scheduler is not None
-        assert self.clip is not None
-        assert self.processor is not None
-        assert self._cos is not None
 
         if self.num_noise <= 0:
             raise ValueError("num_noise must be positive.")
