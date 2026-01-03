@@ -8,12 +8,10 @@ import torch.utils.data
 import pickle
 
 import data
+import utils
 from utils.common import load_config_with_cli
 from utils.network_factory import get_model
 
-import setproctitle
-setproctitle.setproctitle(f"python recomed.py --cfg userid")
- 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Testing')
