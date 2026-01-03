@@ -3,7 +3,6 @@ test_name: "RIGID_DINOv2_zero_shot"
 
 eval_pipeline: utils.validate_plain
 
-# zero-shot method, no checkpoint needed
 resume:
   path: null
   target: torch.load
@@ -15,26 +14,24 @@ model:
   temperature: 0.01
   num_noise_samples: 1
 
-  # preprocessing happens inside forward() (strategy2)
   resize_shorter_edge: 256
   crop_size: 224
   interpolation: "bicubic"
 
 datasets:
   # NOTE: change this to your local dataset root
-  base_path: "/data/DF-arrow"
+  base_path: "/home/data/yabin/DF-arrow"
   source:
     - { target: data.ArrowDatasets,
-        data_root: '${datasets.base_path}/ForenSynths',
-        sub_sets: [ "progan" ],
+        data_root: '${datasets.base_path}/DIF',
+        sub_sets: [ 'dalle_2',  'dalle_mini',  'glide',  'mj',  'sd14',  'sd21', ],
         split: 'test',
-        benchmark_name: 'ForenSynths' }
+        benchmark_name: 'DIF'}
 
   batch_size: 32
   loader_workers: 8
 
   trsf:
-    # IMPORTANT: do NOT Normalize here. RIGIDModel will normalize by DINOv2 stats internally.
     - _target_: torchvision.transforms.Resize
       size: 256
     - _target_: torchvision.transforms.CenterCrop
