@@ -33,11 +33,15 @@ def resume_rine(model, weight_path):
         exec(
             f'model.{name.replace(".", "[", 1).replace(".", "].", 1)} = torch.nn.Parameter(state_dict["{name}"])'
         )
-
 def resume_ojha(model, weight_path):
     state_dict = torch.load(weight_path, map_location='cpu')
     model.fc.load_state_dict(state_dict)
 
 
-
+def no_resume(model, weight_path):
+    """
+    No-op resume function for models that don't need weight loading
+    (e.g., zero-shot models that use pre-trained backbones)
+    """
+    pass
 

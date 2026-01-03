@@ -5,7 +5,7 @@ eval_pipeline: utils.validate_plain
 
 resume:
   path: null
-  target: torch.load
+  target: utils.resume_tools.no_resume
 
 model:
   model_name: "facebook/dinov2-base"
