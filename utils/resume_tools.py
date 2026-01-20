@@ -47,7 +47,9 @@ def no_resume(model, weight_path):
 
 
 def resume_spai(model, weight_path):
-    checkpoint = torch.load(weight_path, map_location='cpu')
+    # PyTorch 2.6 defaults to weights_only=True; SPAI checkpoints may include non-tensor metadata.
+    # Use weights_only=False to preserve prior behavior for trusted checkpoints.
+    checkpoint = torch.load(weight_path, map_location='cpu', weights_only=False)
     if isinstance(checkpoint, dict) and 'model' in checkpoint:
         state_dict = checkpoint['model']
     else:
