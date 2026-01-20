@@ -20,25 +20,32 @@ Support methods:
 
 
 
-|    Model Name     | Train | Test |
-|:-----------------:|:----:|:----:|
-|      CNNDet       |   ✔  |  ✔   |
-|      GramNet      |   ✔  |  ✔   |
-|      FreqNet      |   ✔  |  ✔   |
-|        NPR        |   ✔  |  ✔   |
-|       RINE        |   ✔  |  ✔   |
-|       UniFD       |   ✔  |  ✔   |
-|       DIRE        |   ✘  |  ✔   |
-|     DNF      |   ✘    |   ✔    |
-|       LGrad       |   ✘  |  ✔   |
-|        LNP        |   ✘  |  ✔   |
-|      Fusing       |   ✘  |  ✔   |
-|     PoundNet      |  ✔   |  ✔   |
-|     CLIPping      |  ✘    |  ✔   |
-|     CLIPbased     |   ✘   |  ✔   |
-|     FatFormer     |    ✘  |      |
-|     FreDetect     |   ✘   |  ✔   |
-|     AIDE     |   ✘   |  ✔   |
+
+| Model Name  | Venue (Year) | Train | Test |
+|:-----------:|:------------:|:-----:|:---:|
+|   CNNDet    |   CVPR’20    |  ✔    |  ✔  |
+|   GramNet   |   CVPR’20    |  ✔    |  ✔  |
+|  FreDetect  |   ICML’20    |  ✘    |  ✔  |
+|     LNP     |   ECCV’22    |  ✘    |  ✔  |
+|   Fusing    |   ICIP’22    |  ✘    |  ✔  |
+|    UniFD    |   CVPR’23    |  ✔    |  ✔  |
+|    DIRE     |   ICCV’23    |  ✘    |  ✔  |
+|    LGrad    |   CVPR’23    |  ✘    |  ✔  |
+|  PoundNet   |   arXiv’24   |  ✔    |  ✔  |
+|  CLIPping   |   ICMR’24    |  ✘    |  ✔  |
+|  CLIPbased  |   CVPRW’24   |  ✘    |  ✔  |
+|  FatFormer  |   CVPR’24    |  ✘    |     |
+|   FreqNet   |   AAAI’24    |  ✔    |  ✔  |
+|     NPR     |   CVPR’24    |  ✔    |  ✔  |
+|    RINE     |   ECCV’24    |  ✔    |  ✔  |
+|     DNF     |   ECAI’25    |  ✘    |  ✔  |
+|    AIDE     |   ICLR’25    |  ✘    |  ✔  |
+|    SPAI     |   CVPR’25    |  ✘    |  ✘   |
+
+
+
+
+
 
 
 Support datasets:

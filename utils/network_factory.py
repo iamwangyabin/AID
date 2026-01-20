@@ -24,6 +24,7 @@ MODEL_MODULE_MAP = {
     
     'HiFi_Net': 'networks.HIFI_Net.HiFi_Net',
     'TIMMModel': 'networks.timm_detector',
+    'SPAIModel': 'networks.spai_detector',
 
 }
 

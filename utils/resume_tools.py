@@ -45,3 +45,22 @@ def no_resume(model, weight_path):
     """
     pass
 
+
+def resume_spai(model, weight_path):
+    checkpoint = torch.load(weight_path, map_location='cpu')
+    if isinstance(checkpoint, dict) and 'model' in checkpoint:
+        state_dict = checkpoint['model']
+    else:
+        state_dict = checkpoint
+
+    if any(k.startswith('module.') for k in state_dict.keys()):
+        state_dict = {k.replace('module.', ''): v for k, v in state_dict.items()}
+
+    if any(k.startswith('encoder.') for k in state_dict.keys()):
+        state_dict = {
+            k.replace('encoder.', ''): v
+            for k, v in state_dict.items()
+            if k.startswith('encoder.')
+        }
+
+    model.model.load_state_dict(state_dict, strict=False)

@@ -1,0 +1,38 @@
+arch: "SPAIModel"
+test_name: "SPAI_test"
+
+eval_pipeline: utils.validate_plain
+
+resume:
+  path: "/path/to/spai_weights.pth"
+  target: utils.resume_tools.resume_spai
+
+model:
+  # Optional overrides for SPAI defaults.
+  # config_overrides:
+  #   DATA:
+  #     IMG_SIZE: 224
+  #   MODEL:
+  #     RESOLUTION_MODE: "arbitrary"
+  config_overrides: {}
+
+datasets:
+  # NOTE: change this to your local dataset root
+  base_path: "/data/DF-arrow"
+  source:
+    - { target: data.ArrowDatasets,
+        data_root: '${datasets.base_path}/ForenSynths',
+        sub_sets: [ "progan" ],
+        split: 'test',
+        benchmark_name: 'ForenSynths' }
+
+  batch_size: 16
+  loader_workers: 8
+
+  trsf:
+    # IMPORTANT: do NOT Normalize here. SPAI will normalize internally.
+    - _target_: torchvision.transforms.Resize
+      size: 224
+    - _target_: torchvision.transforms.CenterCrop
+      size: 224
+    - _target_: torchvision.transforms.ToTensor
