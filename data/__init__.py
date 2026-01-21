@@ -1,4 +1,4 @@
-from .augmentations import DCTTransform, Compress, RandomCompress, DataAugment
+from .augmentations import DCTTransform, Compress, RandomCompress, DataAugment, RandomMask
 from .albu_aug import DCT, IsotropicResize
 from .json_datasets import BinaryJsonDatasets, AIDEBinaryJsonDatasets
 from .binary_datasets import BinaryDatasets

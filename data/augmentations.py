@@ -127,6 +127,46 @@ class DataAugment:
         return Image.fromarray(image)
 
 
+class RandomMask:
+    def __init__(self, ratio=0.5, patch_size=16, p=0.5):
+        if isinstance(ratio, float):
+            self.fixed_ratio = True
+            self.ratio = (ratio, ratio)
+        elif isinstance(ratio, (tuple, list)) and len(ratio) == 2 and all(isinstance(r, float) for r in ratio):
+            self.fixed_ratio = False
+            self.ratio = ratio
+        else:
+            raise ValueError("ratio must be a float or a tuple of two floats.")
+
+        self.patch_size = patch_size
+        self.p = p
+
+    def __call__(self, tensor):
+        if random() > self.p:
+            return tensor
+
+        _, h, w = tensor.shape
+        mask = torch.ones((h, w), dtype=torch.float32)
+
+        if self.fixed_ratio:
+            ratio = self.ratio[0]
+        else:
+            ratio = random.uniform(self.ratio[0], self.ratio[1])
+
+        num_masks = int((h * w * ratio) / (self.patch_size ** 2))
+
+        selected_positions = set()
+        while len(selected_positions) < num_masks:
+            top = randint(0, (h // self.patch_size) - 1) * self.patch_size
+            left = randint(0, (w // self.patch_size) - 1) * self.patch_size
+            selected_positions.add((top, left))
+
+        for (top, left) in selected_positions:
+            mask[top:top + self.patch_size, left:left + self.patch_size] = 0
+
+        return tensor * mask.expand_as(tensor)
+
+
 class DCTTransform:
     def __init__(self, mean_path, var_path, log_scale=True, epsilon=1e-12):
         self.log_scale = log_scale
@@ -320,5 +360,3 @@ class DCT_base_Rec_Module(nn.Module):
         x_maxmax1 = self.fold0(x_maxmax1)
 
         return x_minmin, x_maxmax, x_minmin1, x_maxmax1
-
-

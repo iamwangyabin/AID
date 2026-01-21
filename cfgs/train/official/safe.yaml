@@ -1,0 +1,67 @@
+arch: "SAFE"
+resume: null
+name: "SAFE_crop_jitter_mask"
+
+train:
+  pipeline: engine.safe_trainer
+
+  gpu_ids: [0]
+  train_epochs: 100
+  gradient_accumulation_steps: 1
+  check_val_every_n_epoch: 1
+  seed: 1995
+  optimizer:
+    _target_: torch.optim.AdamW
+    _partial_: True
+    lr: 1e-4
+    weight_decay: 1e-3
+
+  scheduler:
+    _target_: torch.optim.lr_scheduler.CosineAnnealingLR
+    _partial_: True
+    T_max: 100
+
+datasets:
+  base_path: "/home/yabin/DataDrive/DF-arrow-data"
+  train:
+    source:
+      - { target: data.ArrowDatasets,
+          data_root: '${datasets.base_path}/ForenSynths',
+          sub_sets: [ "airplane", "bird", "bottle", "car", "chair", "diningtable", "horse", "person", "sheep", "train",
+                      "bicycle", "boat", "bus", "cat", "cow", "dog", "motorbike", "pottedplant", "sofa", "tvmonitor" ],
+          split: 'train_binary' }
+
+    batch_size: 128
+    loader_workers: 16
+    trsf:
+      - _target_: torchvision.transforms.RandomCrop
+        size: 224
+        pad_if_needed: true
+      - _target_: torchvision.transforms.RandomHorizontalFlip
+        p: 0.5
+      - _target_: torchvision.transforms.RandomRotation
+        degrees: 180
+      - _target_: torchvision.transforms.ColorJitter
+        brightness: 0.5
+        contrast: 0.5
+        saturation: 0.5
+      - _target_: torchvision.transforms.ToTensor
+      - _target_: data.RandomMask
+        ratio: [0.0, 0.75]
+        patch_size: 16
+        p: 0.5
+
+  val:
+    source:
+      - { target: data.ArrowDatasets,
+          data_root: '${datasets.base_path}/DIF',
+          sub_sets: [ 'dalle_2',  'dalle_mini',  'glide',  'mj',  'sd14',  'sd21'],
+          split: 'test',
+          benchmark_name: 'DIF' }
+
+    batch_size: 64
+    loader_workers: 16
+    trsf:
+      - _target_: torchvision.transforms.CenterCrop
+        size: 224
+      - _target_: torchvision.transforms.ToTensor

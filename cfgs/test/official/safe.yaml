@@ -1,0 +1,25 @@
+arch: "SAFE"
+test_name: "SAFE_eval"
+
+eval_pipeline: utils.validate_multicls
+
+resume:
+  path: 'logs/SAFE_crop_jitter_mask/last.ckpt'
+  target: utils.resume_tools.resume_lightning
+
+datasets:
+  base_path: "/home/yabin/DataDrive/DF-arrow-data"
+  source:
+    - { target: data.ArrowDatasets,
+        data_root: '${datasets.base_path}/DIF',
+        sub_sets: [ 'dalle_2',  'dalle_mini',  'glide',  'mj',  'sd14',  'sd21'],
+        split: 'test',
+        benchmark_name: 'DIF' }
+
+  batch_size: 64
+  loader_workers: 16
+
+  trsf:
+    - _target_: torchvision.transforms.CenterCrop
+      size: 224
+    - _target_: torchvision.transforms.ToTensor

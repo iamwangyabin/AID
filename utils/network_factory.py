@@ -13,6 +13,7 @@ MODEL_MODULE_MAP = {
     'FreqNet': 'networks.freqnet_detector', 
     'GramNet': 'networks.gramnet_detector',
     'CNNDet': 'networks.cnndet',
+    'SAFE': 'networks.safe_detector',
     
     'RINEModel': 'networks.rine_detector',
     'OjhaModel': 'networks.ojha_detector',
