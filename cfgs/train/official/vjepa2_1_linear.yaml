@@ -3,7 +3,7 @@ resume: null
 name: "vjepa2_1_linear_probe_large"
 
 model:
-  checkpoint_path: "/Users/wangyabin/Documents/GitHub/checkpoints/vjepa2_1_vitl_dist_vitG_384.pt"
+  checkpoint_path: "./vjepa2_1_vitl_dist_vitG_384.pt"
   backbone_name: "vit_large"
   checkpoint_key: "ema_encoder"
   image_size: 384
@@ -43,7 +43,7 @@ train:
     T_max: ${train.train_epochs}
 
 datasets:
-  base_path: "/home/yabin/DataDrive/DF-arrow-data"
+  base_path: "/home/home/yabin/DF-arrow"
   train:
     source:
       - { target: data.ArrowDatasets,
