@@ -1,0 +1,51 @@
+arch: "VJEPA2_1Linear"
+test_name: "vjepa2_1_linear_probe_large"
+
+eval_pipeline: utils.validate_plain
+
+resume:
+  path: "./logs/your_run_name/last.ckpt"
+  target: utils.resume_tools.resume_lightning
+
+model:
+  checkpoint_path: "/Users/wangyabin/Documents/GitHub/checkpoints/vjepa2_1_vitl_dist_vitG_384.pt"
+  backbone_name: "vit_large"
+  checkpoint_key: "ema_encoder"
+  image_size: 384
+  num_frames: 18
+  patch_size: 16
+  tubelet_size: 2
+  num_classes: 1
+  freeze_backbone: true
+  pooling: "mean"
+  use_rope: true
+  uniform_power: true
+  use_sdpa: true
+  use_silu: false
+  wide_silu: true
+  img_temporal_dim_size: 1
+  interpolate_rope: true
+
+datasets:
+  base_path: "/home/yabin/DataDrive/DF-arrow-data"
+  source:
+    - { target: data.ArrowDatasets,
+        data_root: '${datasets.base_path}/DIF',
+        sub_sets: [ 'dalle_2', 'dalle_mini', 'glide', 'mj', 'sd14', 'sd21' ],
+        split: 'test',
+        benchmark_name: 'DIF' }
+
+  batch_size: 16
+  loader_workers: 8
+  trsf:
+    - _target_: data.RandomCompress
+      method: "JPEG"
+      qf: [70, 100]
+    - _target_: torchvision.transforms.Resize
+      size: 448
+    - _target_: torchvision.transforms.CenterCrop
+      size: 384
+    - _target_: torchvision.transforms.ToTensor
+    - _target_: torchvision.transforms.Normalize
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]

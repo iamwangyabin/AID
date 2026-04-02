@@ -1,0 +1,95 @@
+arch: "VJEPA2_1Linear"
+resume: null
+name: "vjepa2_1_linear_probe_large"
+
+model:
+  checkpoint_path: "/Users/wangyabin/Documents/GitHub/checkpoints/vjepa2_1_vitl_dist_vitG_384.pt"
+  backbone_name: "vit_large"
+  checkpoint_key: "ema_encoder"
+  image_size: 384
+  num_frames: 18
+  patch_size: 16
+  tubelet_size: 2
+  num_classes: 1
+  freeze_backbone: true
+  pooling: "mean"
+  use_rope: true
+  uniform_power: true
+  use_sdpa: true
+  use_silu: false
+  wide_silu: true
+  img_temporal_dim_size: 1
+  interpolate_rope: true
+
+train:
+  pipeline: engine.base_trainer
+
+  gpu_ids: [0]
+  train_epochs: 20
+  gradient_accumulation_steps: 1
+  check_val_every_n_epoch: 1
+  seed: 1995
+  precision: "16-mixed"
+
+  optimizer:
+    _target_: torch.optim.AdamW
+    _partial_: True
+    lr: 1e-3
+    weight_decay: 1e-4
+
+  scheduler:
+    _target_: torch.optim.lr_scheduler.CosineAnnealingLR
+    _partial_: True
+    T_max: ${train.train_epochs}
+
+datasets:
+  base_path: "/home/yabin/DataDrive/DF-arrow-data"
+  train:
+    source:
+      - { target: data.ArrowDatasets,
+          data_root: '${datasets.base_path}/ForenSynths',
+          sub_sets: [ "airplane", "bird", "bottle", "car", "chair", "diningtable", "horse", "person", "sheep", "train",
+                      "bicycle", "boat", "bus", "cat", "cow", "dog", "motorbike", "pottedplant", "sofa", "tvmonitor" ],
+          split: 'train_binary' }
+
+    batch_size: 16
+    loader_workers: 8
+    trsf:
+      - _target_: torchvision.transforms.Resize
+        size: 448
+      - _target_: torchvision.transforms.RandomResizedCrop
+        size: 384
+      - _target_: torchvision.transforms.RandomHorizontalFlip
+      - _target_: data.DataAugment
+        blur_prob: 0.1
+        blur_sig: [0.0, 3.0]
+        jpg_prob: 0.1
+        jpg_method: ['cv2', 'pil']
+        jpg_qual: [30, 100]
+      - _target_: torchvision.transforms.ToTensor
+      - _target_: torchvision.transforms.Normalize
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+
+  val:
+    source:
+      - { target: data.ArrowDatasets,
+          data_root: '${datasets.base_path}/DIF',
+          sub_sets: [ 'dalle_2', 'dalle_mini', 'glide', 'mj', 'sd14', 'sd21' ],
+          split: 'test',
+          benchmark_name: 'DIF' }
+
+    batch_size: 16
+    loader_workers: 8
+    trsf:
+      - _target_: data.RandomCompress
+        method: "JPEG"
+        qf: [70, 100]
+      - _target_: torchvision.transforms.Resize
+        size: 448
+      - _target_: torchvision.transforms.CenterCrop
+        size: 384
+      - _target_: torchvision.transforms.ToTensor
+      - _target_: torchvision.transforms.Normalize
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
