@@ -45,7 +45,7 @@ class VJEPA2LinearProbe(nn.Module):
         backbone_name="vit_base",
         checkpoint_key="auto",
         image_size=384,
-        num_frames=18,
+        num_frames=1,
         patch_size=16,
         tubelet_size=2,
         num_classes=1,

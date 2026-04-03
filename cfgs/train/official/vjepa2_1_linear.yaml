@@ -54,7 +54,7 @@ datasets:
           split: 'train_binary' }
 
     batch_size: 64
-    loader_workers: 8
+    loader_workers: 16
     trsf:
       - _target_: torchvision.transforms.RandomResizedCrop
         size: 384

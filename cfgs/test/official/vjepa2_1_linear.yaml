@@ -12,7 +12,7 @@ model:
   backbone_name: "vit_large"
   checkpoint_key: "ema_encoder"
   image_size: 384
-  num_frames: 18
+  num_frames: 1
   patch_size: 16
   tubelet_size: 2
   num_classes: 1
