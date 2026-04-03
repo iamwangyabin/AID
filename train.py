@@ -83,10 +83,10 @@ if __name__ == '__main__':
     trainer = L.Trainer(logger=wandb_logger, max_epochs=conf.train.train_epochs, accelerator="gpu", devices=conf.train.gpu_ids,
                         callbacks=[checkpoint_callback],
                         check_val_every_n_epoch=conf.train.check_val_every_n_epoch,
+                        num_sanity_val_steps=conf.train.get('num_sanity_val_steps', 2),
                         precision=conf.train.get('precision', "16"))
 
     trainer.fit(model=model, train_dataloaders=train_loader, val_dataloaders=val_loader)
 
     trainer.save_checkpoint(os.path.join('logs', today_str, "last.ckpt"))
-
 
