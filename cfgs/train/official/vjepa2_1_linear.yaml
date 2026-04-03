@@ -53,8 +53,8 @@ datasets:
                       "bicycle", "boat", "bus", "cat", "cow", "dog", "motorbike", "pottedplant", "sofa", "tvmonitor" ],
           split: 'train_binary' }
 
-    batch_size: 32
-    loader_workers: 16
+    batch_size: 64
+    loader_workers: 32
     trsf:
       - _target_: torchvision.transforms.RandomResizedCrop
         size: 384
