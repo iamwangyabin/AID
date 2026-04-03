@@ -49,8 +49,7 @@ datasets:
     source:
       - { target: data.ArrowDatasets,
           data_root: '${datasets.base_path}/ForenSynths',
-          sub_sets: [ "airplane", "bird", "bottle", "car", "chair", "diningtable", "horse", "person", "sheep", "train",
-                      "bicycle", "boat", "bus", "cat", "cow", "dog", "motorbike", "pottedplant", "sofa", "tvmonitor" ],
+          sub_sets: [ "airplane",  ],
           split: 'train_binary' }
 
     batch_size: 64
