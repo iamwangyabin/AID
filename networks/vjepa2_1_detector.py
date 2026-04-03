@@ -99,10 +99,15 @@ class VJEPA2LinearProbe(nn.Module):
             self.backbone.eval()
         return self
 
-    def _prepare_video_input(self, x):
-        if x.ndim != 4:
-            raise ValueError(f"Expected image tensor of shape [B, C, H, W], got {tuple(x.shape)}")
-        return x.unsqueeze(2).repeat(1, 1, self.num_frames, 1, 1)
+    def _prepare_image_input(self, x):
+        if x.ndim == 4:
+            return x.unsqueeze(2)
+        if x.ndim == 5 and x.shape[2] == 1:
+            return x
+        raise ValueError(
+            "Expected image tensor of shape [B, C, H, W] or [B, C, 1, H, W], "
+            f"got {tuple(x.shape)}"
+        )
 
     def _pool_tokens(self, tokens):
         if self.pooling == "mean":
@@ -112,12 +117,12 @@ class VJEPA2LinearProbe(nn.Module):
         raise ValueError(f"Unsupported pooling mode: {self.pooling}")
 
     def forward(self, x):
-        video = self._prepare_video_input(x)
+        image = self._prepare_image_input(x)
         if self.freeze_backbone:
             with torch.no_grad():
-                tokens = self.backbone(video)
+                tokens = self.backbone(image)
         else:
-            tokens = self.backbone(video)
+            tokens = self.backbone(image)
 
         features = self._pool_tokens(tokens)
         logits = self.classifier(features)

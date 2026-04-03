@@ -25,12 +25,12 @@ train:
   pipeline: engine.base_trainer
 
   gpu_ids: [0]
-  train_epochs: 20
+  train_epochs: 1
   gradient_accumulation_steps: 1
   check_val_every_n_epoch: 1
   num_sanity_val_steps: 0
   seed: 1995
-  precision: "16-mixed"
+  precision: "bf16"
 
   optimizer:
     _target_: torch.optim.AdamW
@@ -49,15 +49,12 @@ datasets:
     source:
       - { target: data.ArrowDatasets,
           data_root: '${datasets.base_path}/ForenSynths',
-          sub_sets: [ "airplane", "bird", "bottle", "car", "chair", "diningtable", "horse", "person", "sheep", "train",
-                      "bicycle", "boat", "bus", "cat", "cow", "dog", "motorbike", "pottedplant", "sofa", "tvmonitor" ],
+          sub_sets: [ "airplane", "bird", "bottle", "car"],
           split: 'train_binary' }
 
-    batch_size: 16
+    batch_size: 128
     loader_workers: 8
     trsf:
-      - _target_: torchvision.transforms.Resize
-        size: 448
       - _target_: torchvision.transforms.RandomResizedCrop
         size: 384
       - _target_: torchvision.transforms.RandomHorizontalFlip
