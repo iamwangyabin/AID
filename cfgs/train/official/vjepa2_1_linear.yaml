@@ -7,7 +7,7 @@ model:
   backbone_name: "vit_large"
   checkpoint_key: "ema_encoder"
   image_size: 384
-  num_frames: 18
+  num_frames: 1
   patch_size: 16
   tubelet_size: 2
   num_classes: 1
@@ -49,10 +49,11 @@ datasets:
     source:
       - { target: data.ArrowDatasets,
           data_root: '${datasets.base_path}/ForenSynths',
-          sub_sets: [ "airplane", "bird", "bottle", "car"],
+          sub_sets: [ "airplane", "bird", "bottle", "car", "chair", "diningtable", "horse", "person", "sheep", "train",
+                      "bicycle", "boat", "bus", "cat", "cow", "dog", "motorbike", "pottedplant", "sofa", "tvmonitor" ],
           split: 'train_binary' }
 
-    batch_size: 128
+    batch_size: 64
     loader_workers: 8
     trsf:
       - _target_: torchvision.transforms.RandomResizedCrop
@@ -83,8 +84,6 @@ datasets:
       - _target_: data.RandomCompress
         method: "JPEG"
         qf: [70, 100]
-      - _target_: torchvision.transforms.Resize
-        size: 448
       - _target_: torchvision.transforms.CenterCrop
         size: 384
       - _target_: torchvision.transforms.ToTensor
