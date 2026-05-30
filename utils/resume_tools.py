@@ -43,6 +43,16 @@ def resume_ojha(model, weight_path):
     model.fc.load_state_dict(state_dict)
 
 
+def resume_d3_attention_head(model, weight_path):
+    """Load the official D3 classifier.pth attention-head checkpoint."""
+    state_dict = torch.load(weight_path, map_location='cpu')
+    if 'state_dict' in state_dict:
+        state_dict = state_dict['state_dict']
+    if any(key.startswith('attention_head.') for key in state_dict):
+        state_dict = {key.replace('attention_head.', '', 1): value for key, value in state_dict.items()}
+    model.attention_head.load_state_dict(state_dict)
+
+
 def no_resume(model, weight_path):
     """
     No-op resume function for models that don't need weight loading
