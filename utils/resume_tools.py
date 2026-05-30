@@ -2,8 +2,9 @@ import torch
 import timm
 import torchvision
 
-def resume_lightning(model, weight_path):
-    state_dict = torch.load(weight_path, map_location='cpu')['state_dict']
+def resume_checkpoint(model, weight_path):
+    checkpoint = torch.load(weight_path, map_location='cpu')
+    state_dict = checkpoint['state_dict'] if 'state_dict' in checkpoint else checkpoint
     new_state_dict = {}
     for key, value in state_dict.items():
         if key.startswith('model.'):
@@ -12,6 +13,10 @@ def resume_lightning(model, weight_path):
         else:
             new_state_dict[key] = value
     model.load_state_dict(new_state_dict)
+
+
+def resume_lightning(model, weight_path):
+    resume_checkpoint(model, weight_path)
 
 def resume_timm(model, weight_path):
     state_dict = torch.load(weight_path, map_location='cpu')
@@ -44,4 +49,3 @@ def no_resume(model, weight_path):
     (e.g., zero-shot models that use pre-trained backbones)
     """
     pass
-

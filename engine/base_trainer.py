@@ -1,12 +1,42 @@
 import torch
 import torch.nn as nn
-import lightning as L
 
 from utils.validate import validate
 from utils.network_factory import get_model
 
  
-class Trainer(L.LightningModule):
+class BaseTrainerModule(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.logged_metrics = {}
+
+    @property
+    def dtype(self):
+        try:
+            return next(self.parameters()).dtype
+        except StopIteration:
+            return torch.float32
+
+    def log(self, name, value, **kwargs):
+        if torch.is_tensor(value):
+            value = value.detach()
+            if value.numel() == 1:
+                value = value.float().cpu().item()
+        self.logged_metrics[name] = value
+
+    def consume_logged_metrics(self):
+        metrics = dict(self.logged_metrics)
+        self.logged_metrics.clear()
+        return metrics
+
+    def clear_validation_outputs(self):
+        for attr in ("validation_step_outputs_preds", "validation_step_outputs_gts"):
+            outputs = getattr(self, attr, None)
+            if outputs is not None:
+                outputs.clear()
+
+
+class Trainer(BaseTrainerModule):
     def __init__(self, opt):
         super().__init__()
         self.opt = opt
@@ -48,5 +78,4 @@ class Trainer(L.LightningModule):
         optimizer = self.opt.train.optimizer(optparams)
         scheduler = self.opt.train.scheduler(optimizer)
         return [optimizer], [scheduler]
-
 

@@ -1,10 +1,10 @@
 import numpy as np
 
-import lightning as L
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
 
+from engine.base_trainer import BaseTrainerModule
 from utils.validate import validate
 from utils.network_factory import get_model
 
@@ -23,7 +23,7 @@ def generate_mapping(base_number):
             mapping[k] = base_number + (k - 1) // 2
     return mapping
 
-class Trainer_PoundNet(L.LightningModule):
+class Trainer_PoundNet(BaseTrainerModule):
     def __init__(self, opt):
         super().__init__()
         self.opt = opt
@@ -93,7 +93,6 @@ class Trainer_PoundNet(L.LightningModule):
         optimizer = self.opt.train.optimizer(optparams)
         scheduler = self.opt.train.scheduler(optimizer)
         return [optimizer], [scheduler]
-
 
 
 
