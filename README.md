@@ -16,29 +16,29 @@ AID is a comprehensive toolbox and benchmark suite for detecting AI-generated (s
 
 
 Support methods:
-注意当前仓库正在重构，目前经过验证能运行的是RINE，其余方法都需要debug
+注意当前仓库正在重构，目前经过验证能运行的是 RINE，其余方法都需要 debug。
 
-
-
-|    Model Name     | Train | Test |
-|:-----------------:|:----:|:----:|
-|      CNNDet       |   ✔  |  ✔   |
-|      GramNet      |   ✔  |  ✔   |
-|      FreqNet      |   ✔  |  ✔   |
-|        NPR        |   ✔  |  ✔   |
-|       RINE        |   ✔  |  ✔   |
-|       UniFD       |   ✔  |  ✔   |
-|       DIRE        |   ✘  |  ✔   |
-|     DNF      |   ✘    |   ✔    |
-|       LGrad       |   ✘  |  ✔   |
-|        LNP        |   ✘  |  ✔   |
-|      Fusing       |   ✘  |  ✔   |
-|     PoundNet      |  ✔   |  ✔   |
-|     CLIPping      |  ✘    |  ✔   |
-|     CLIPbased     |   ✘   |  ✔   |
-|     FatFormer     |    ✘  |      |
-|     FreDetect     |   ✘   |  ✔   |
-|     AIDE     |   ✘   |  ✔   |
+| Method | Publication | Train | Test |
+|:--|:--:|:--:|:--:|
+| [CNNDet](https://github.com/peterwang512/CNNDetection) | CVPR 2020 | ✔ | ✔ |
+| [GramNet](https://github.com/liuzhengzhe/Global_Texture_Enhancement_for_Fake_Face_Detection_in_the-Wild) | CVPR 2020 | ✔ | ✔ |
+| [FreDetect](https://github.com/RUB-SysSec/GANDCTAnalysis) | ICML 2020 | ✘ | ✔ |
+| [LNP](https://www.ecva.net/papers/eccv_2022/papers_ECCV/papers/136740089.pdf) | ECCV 2022 | ✘ | ✔ |
+| [Fusing](https://github.com/littlejuyan/FusingGlobalandLocal) | ICIP 2022 | ✘ | ✔ |
+| [UniFD](https://github.com/Yuheng-Li/UniversalFakeDetect) | CVPR 2023 | ✔ | ✔ |
+| [DIRE](https://github.com/ZhendongWang6/DIRE) | ICCV 2023 | ✘ | ✔ |
+| [LGrad](https://github.com/chuangchuangtan/LGrad) | CVPR 2023 | ✘ | ✔ |
+| [DNF](https://github.com/YichiCS/Diffusion-Noise-Feature) | arXiv 2023 | ✘ | ✔ |
+| [NPR](https://github.com/chuangchuangtan/NPR-DeepfakeDetection) | CVPR 2024 | ✔ | ✔ |
+| [FreqNet](https://github.com/chuangchuangtan/FreqNet-DeepfakeDetection) | AAAI 2024 | ✔ | ✔ |
+| [RINE](https://github.com/mever-team/rine) | ECCV 2024 | ✔ | ✔ |
+| [FatFormer](https://github.com/Michel-liu/FatFormer) | CVPR 2024 | ✘ | ✘ |
+| [CLIPping](https://github.com/sfimediafutures/CLIPping-the-Deception) | ICMR 2024 | ✘ | ✔ |
+| [CLIPbased](https://github.com/grip-unina/ClipBased-SyntheticImageDetection) | CVPRW 2024 | ✘ | ✔ |
+| [AIDE](https://github.com/shilinyan99/AIDE) | ICLR 2025 | ✘ | ✔ |
+| [FIRE](https://github.com/Chuchad/FIRE) | CVPR 2025 | ✔ | ✔ |
+| [B-Free](https://github.com/grip-unina/B-Free) | CVPR 2025 | ✔ | ✔ |
+| [PoundNet](https://github.com/iamwangyabin/PoundNet) | TPAMI 2026 | ✔ | ✔ |
 
 
 Support datasets:

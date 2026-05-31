@@ -1,0 +1,91 @@
+arch: "BFreeModel"
+name: "bfree_dino2reg4"
+
+model:
+  backbone_name: "vit_base_patch14_reg4_dinov2.lvd142m"
+  crop_size: 504
+  num_classes: 1
+  pretrained: true
+  freeze_backbone: false
+
+train:
+  pipeline: engine.base_trainer
+  gpu_ids: [0]
+  train_epochs: 5
+  gradient_accumulation_steps: 1
+  check_val_every_n_epoch: 1
+  num_sanity_val_steps: 0
+  seed: 1995
+  precision: "bf16"
+
+  optimizer:
+    _target_: torch.optim.AdamW
+    _partial_: True
+    lr: 1e-5
+    weight_decay: 1e-4
+
+  scheduler:
+    _target_: torch.optim.lr_scheduler.CosineAnnealingLR
+    _partial_: True
+    T_max: ${train.train_epochs}
+
+datasets:
+  # Download and unzip the official B-Free training data here:
+  # https://github.com/grip-unina/B-Free/blob/main/training_data/
+  base_path: "/path/to/B-Free/training_data"
+  train:
+    source:
+      - { target: data.BFreeTrainingDataset,
+          data_root: '${datasets.base_path}',
+          sub_sets: [ "all" ],
+          split: 'train' }
+
+    batch_size: 16
+    loader_workers: 8
+    trsf:
+      - _target_: torchvision.transforms.RandomResizedCrop
+        size: 504
+        scale: [0.75, 1.0]
+        ratio: [0.95, 1.05]
+      - _target_: torchvision.transforms.RandomHorizontalFlip
+        p: 0.5
+      - _target_: torchvision.transforms.ColorJitter
+        brightness: 0.1
+        contrast: 0.1
+        saturation: 0.1
+        hue: 0.02
+      - _target_: data.DataAugment
+        blur_prob: 0.2
+        blur_sig: [0.0, 3.0]
+        jpg_prob: 0.2
+        jpg_method: ['cv2', 'pil']
+        jpg_qual: [30, 100]
+      - _target_: torchvision.transforms.ToTensor
+      - _target_: data.AddGaussianNoise
+        sigma: [0.0, 0.03]
+        p: 0.2
+      - _target_: torchvision.transforms.RandomErasing
+        p: 0.2
+        scale: [0.02, 0.15]
+        ratio: [0.3, 3.3]
+        value: "random"
+      - _target_: torchvision.transforms.Normalize
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+
+  val:
+    source:
+      - { target: data.BFreeTrainingDataset,
+          data_root: '${datasets.base_path}',
+          sub_sets: [ "all" ],
+          split: 'valid' }
+
+    batch_size: 16
+    loader_workers: 8
+    trsf:
+      - _target_: torchvision.transforms.CenterCrop
+        size: 504
+      - _target_: torchvision.transforms.ToTensor
+      - _target_: torchvision.transforms.Normalize
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]

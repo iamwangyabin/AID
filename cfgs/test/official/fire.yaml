@@ -1,0 +1,46 @@
+arch: "FIREModel"
+test_name: "FIRE_official"
+
+eval_pipeline: utils.validate_plain
+
+resume:
+  # Official checkpoints are released by Chuchad/FIRE.
+  # Put the downloaded .pt file here, or override from CLI:
+  #   python test.py --cfg cfgs/test/official/fire.yaml resume.path=/path/to/fire.pt
+  path: "./networks/weights/fire.pt"
+  target: utils.resume_tools.resume_fire
+
+model:
+  vae_model_name: "runwayml/stable-diffusion-v1-5"
+  vae_subfolder: "vae"
+  vae_dtype: "auto"
+  latent_mode: "sample"
+  mode: "frq"
+  norm_layer: "instance"
+  pretrained: true
+  radiuslow: 40
+  radiushigh: 120
+  image_size: 256
+  resize_input: true
+
+datasets:
+  base_path: "../data"
+  source:
+    - { target: data.ArrowDatasets,
+        data_root: '${datasets.base_path}/DiffusionForensics',
+        sub_sets: [ 'lsun_bedroom_adm', 'lsun_bedroom_iddpm', 'lsun_bedroom_ddpm', 'lsun_bedroom_pndm',
+                    'lsun_bedroom_sdv2', 'lsun_bedroom_ldm', 'lsun_bedroom_vqdiffusion', 'lsun_bedroom_if',
+                    'lsun_bedroom_dalle2', 'lsun_bedroom_midjourney' ],
+        split: 'test',
+        benchmark_name: 'DiffusionForensics' }
+
+  # FIRE runs a Stable Diffusion VAE during inference, so keep this smaller than
+  # the ResNet/CLIP-only methods unless you have enough GPU memory.
+  batch_size: 4
+  loader_workers: 16
+
+  trsf:
+    - _target_: torchvision.transforms.Resize
+      size: [256, 256]
+      antialias: true
+    - _target_: torchvision.transforms.ToTensor

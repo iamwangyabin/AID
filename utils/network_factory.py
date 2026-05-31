@@ -13,6 +13,8 @@ MODEL_MODULE_MAP = {
     'FreqNet': 'networks.freqnet_detector', 
     'GramNet': 'networks.gramnet_detector',
     'CNNDet': 'networks.cnndet',
+    'LOTAModel': 'networks.lota_detector',
+    'LOTA': 'networks.lota_detector',
     
     'RINEModel': 'networks.rine_detector',
     'OjhaModel': 'networks.ojha_detector',
@@ -21,11 +23,17 @@ MODEL_MODULE_MAP = {
     'ManifoldInducedBiases': 'networks.sdv14_detector',
     'RIGIDModel': 'networks.rigid_detector',
     'WaRPADModel': 'networks.warpad_detector',
+    'FIREModel': 'networks.fire_detector',
+    'FIRE': 'networks.fire_detector',
     
     'HiFi_Net': 'networks.HIFI_Net.HiFi_Net',
     'TIMMModel': 'networks.timm_detector',
     'VJEPA2_1Linear': 'networks.vjepa2_1_detector',
+    'BFreeModel': 'networks.bfree_detector',
     'D3Model': 'networks.d3_detector',
+    'VIBNet': 'networks.vibnet_detector',
+    'SPAIModel': 'networks.spai_detector',
+    'SPAIMFM': 'networks.spai_detector',
 
 }
 

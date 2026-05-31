@@ -1,0 +1,71 @@
+arch: "FIREModel"
+name: "fire_diffusionforensics"
+
+model:
+  vae_model_name: "runwayml/stable-diffusion-v1-5"
+  vae_subfolder: "vae"
+  vae_dtype: "auto"
+  latent_mode: "sample"
+  mode: "frq"
+  norm_layer: "instance"
+  pretrained: true
+  radiuslow: 40
+  radiushigh: 120
+  image_size: 256
+  resize_input: true
+
+train:
+  pipeline: engine.fire_trainer
+  gpu_ids: [0]
+  train_epochs: 100
+  check_val_every_n_epoch: 1
+  seed: 1995
+  precision: "16"
+  gradient_accumulation_steps: 1
+  bce_weight: 0.6
+  rec_weight: 0.2
+  mask_weight: 0.2
+  optimizer:
+    _target_: torch.optim.Adam
+    _partial_: True
+    lr: 1e-4
+    betas: [0.9, 0.999]
+
+  scheduler:
+    _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
+    _partial_: True
+    patience: 5
+    threshold: 0.002
+
+datasets:
+  base_path: "../data"
+  train:
+    source:
+      - { target: data.ArrowDatasets,
+          data_root: '${datasets.base_path}/DiffusionForensics',
+          sub_sets: [ 'lsun_bedroom_adm' ],
+          split: 'train' }
+
+    batch_size: 24
+    loader_workers: 16
+    trsf:
+      - _target_: torchvision.transforms.Resize
+        size: [256, 256]
+        antialias: true
+      - _target_: torchvision.transforms.ToTensor
+
+  val:
+    source:
+      - { target: data.ArrowDatasets,
+          data_root: '${datasets.base_path}/DiffusionForensics',
+          sub_sets: [ 'lsun_bedroom_adm', 'lsun_bedroom_sdv2', 'lsun_bedroom_midjourney' ],
+          split: 'test',
+          benchmark_name: 'DiffusionForensics' }
+
+    batch_size: 12
+    loader_workers: 16
+    trsf:
+      - _target_: torchvision.transforms.Resize
+        size: [256, 256]
+        antialias: true
+      - _target_: torchvision.transforms.ToTensor

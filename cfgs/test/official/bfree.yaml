@@ -1,0 +1,36 @@
+arch: "BFreeModel"
+test_name: "BFREE_dino2reg4"
+
+eval_pipeline: utils.validate_plain
+
+resume:
+  # Official weights:
+  # https://www.grip.unina.it/download/prog/B-Free/weights/BFREE_dino2reg4.zip
+  path: "/path/to/weights/BFREE_dino2reg4/model_epoch_best.pth"
+  target: utils.resume_tools.resume_bfree
+
+model:
+  backbone_name: "vit_base_patch14_reg4_dinov2.lvd142m"
+  crop_size: 504
+  num_classes: 1
+  pretrained: false
+  freeze_backbone: false
+
+datasets:
+  base_path: "/home/data/yabin/DF-arrow"
+  source:
+    - { target: data.ArrowDatasets,
+        data_root: '${datasets.base_path}/DIF',
+        sub_sets: [ 'dalle_2', 'dalle_mini', 'glide', 'mj', 'sd14', 'sd21' ],
+        split: 'test',
+        benchmark_name: 'DIF' }
+
+  # Keep batch_size=1 for variable-size images, matching the official code path.
+  batch_size: 1
+  loader_workers: 8
+
+  trsf:
+    - _target_: torchvision.transforms.ToTensor
+    - _target_: torchvision.transforms.Normalize
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]

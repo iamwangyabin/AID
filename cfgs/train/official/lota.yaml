@@ -1,0 +1,69 @@
+arch: "LOTAModel"
+name: "LOTA_progan"
+
+model:
+  pretrained: true
+  num_classes: 1
+
+train:
+  pipeline: engine.base_trainer
+  precision: 32
+  gpu_ids: [0]
+  train_epochs: 30
+  gradient_accumulation_steps: 1
+  check_val_every_n_epoch: 1
+  seed: 1995
+  optimizer:
+    _target_: torch.optim.Adam
+    _partial_: true
+    lr: 0.0001
+
+  scheduler:
+    _target_: torch.optim.lr_scheduler.PolynomialLR
+    _partial_: true
+    total_iters: 30
+    power: 0.9
+
+datasets:
+  base_path: "/home/yabin/DataDrive/DF-arrow-data"
+  train:
+    source:
+      - { target: data.ArrowDatasets,
+          data_root: '${datasets.base_path}/ForenSynths',
+          sub_sets: [ "airplane", "bird", "bottle", "car", "chair", "diningtable", "horse", "person", "sheep", "train",
+                      "bicycle", "boat", "bus", "cat", "cow", "dog", "motorbike", "pottedplant", "sofa", "tvmonitor" ],
+          split: 'train_binary' }
+
+    batch_size: 64
+    loader_workers: 16
+    trsf:
+      - _target_: data.LOTABitPatch
+        img_height: 256
+        bit_mode: "thresholding"
+        patch_size: 32
+        patch_mode: "max"
+      - _target_: torchvision.transforms.ToTensor
+      - _target_: torchvision.transforms.Normalize
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+
+  val:
+    source:
+      - { target: data.ArrowDatasets,
+          data_root: '${datasets.base_path}/DIF',
+          sub_sets: [ 'dalle_2',  'dalle_mini',  'glide',  'mj',  'sd14',  'sd21'],
+          split: 'test',
+          benchmark_name: 'DIF' }
+
+    batch_size: 64
+    loader_workers: 16
+    trsf:
+      - _target_: data.LOTABitPatch
+        img_height: 256
+        bit_mode: "thresholding"
+        patch_size: 32
+        patch_mode: "max"
+      - _target_: torchvision.transforms.ToTensor
+      - _target_: torchvision.transforms.Normalize
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]

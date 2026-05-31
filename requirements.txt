@@ -7,8 +7,8 @@ albumentations
 scikit-learn
 scikit-image
 opencv-python
+diffusers
 git+https://github.com/rwightman/pytorch-image-models.git@v0.9.12
 git+https://github.com/openai/CLIP.git
-
 
 

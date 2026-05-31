@@ -127,6 +127,100 @@ class DataAugment:
         return Image.fromarray(image)
 
 
+class AddGaussianNoise:
+    def __init__(self, sigma=(0.0, 0.03), p=0.5):
+        self.sigma = sigma
+        self.p = p
+
+    def __call__(self, image):
+        if random() >= self.p:
+            return image
+        sigma = sample_continuous(self.sigma)
+        noise = torch.randn_like(image) * sigma
+        return torch.clamp(image + noise, 0.0, 1.0)
+
+
+def _lota_gradient_score(patch):
+    patch = patch.astype(np.int64, copy=False)
+    diff_horizontal = np.abs(patch[:, :-1, :] - patch[:, 1:, :]).sum()
+    diff_vertical = np.abs(patch[:-1, :, :] - patch[1:, :, :]).sum()
+    diff_diagonal = np.abs(patch[:-1, :-1, :] - patch[1:, 1:, :]).sum()
+    diff_diagonal += np.abs(patch[1:, :-1, :] - patch[:-1, 1:, :]).sum()
+    return diff_horizontal + diff_vertical + diff_diagonal
+
+
+class LOTABitPatch:
+    """LOTA bit-plane noise extraction and maximum-gradient patch selection."""
+
+    def __init__(
+        self,
+        img_height=256,
+        bit_mode="thresholding",
+        patch_size=32,
+        patch_mode="max",
+        num_patches=None,
+        resize_before_patch=True,
+    ):
+        if bit_mode not in {"thresholding", "scaling"}:
+            raise ValueError("bit_mode must be 'thresholding' or 'scaling'.")
+        if patch_mode not in {"max", "min", "random"}:
+            raise ValueError("patch_mode must be 'max', 'min' or 'random'.")
+        if img_height < patch_size:
+            raise ValueError("img_height must be greater than or equal to patch_size.")
+
+        self.img_height = int(img_height)
+        self.bit_mode = bit_mode
+        self.patch_size = int(patch_size)
+        self.patch_mode = patch_mode
+        self.num_patches = num_patches
+        self.resize_before_patch = resize_before_patch
+
+    def _build_noise_image(self, image):
+        image = np.array(image.convert("RGB"))
+        low_bits = (image & 0x07).astype(np.uint8)
+
+        if self.bit_mode == "thresholding":
+            return np.where(low_bits > 0, 255, 0).astype(np.uint8)
+
+        return (low_bits * (255 // 7)).astype(np.uint8)
+
+    def __call__(self, image):
+        noise = self._build_noise_image(image)
+        noise_image = Image.fromarray(noise)
+
+        if self.resize_before_patch or min(noise_image.size) < self.patch_size:
+            noise_image = transforms.functional.resize(
+                noise_image,
+                [self.img_height, self.img_height],
+                interpolation=transforms.InterpolationMode.BILINEAR,
+            )
+
+        num_patches = self.num_patches or (self.img_height // self.patch_size) ** 2
+        num_patches = max(1, int(num_patches))
+
+        patches = []
+        for _ in range(num_patches):
+            top, left, height, width = transforms.RandomCrop.get_params(
+                noise_image,
+                output_size=(self.patch_size, self.patch_size),
+            )
+            patch = transforms.functional.crop(noise_image, top, left, height, width)
+            patches.append(np.array(patch))
+
+        if self.patch_mode == "max":
+            selected_patch = max(patches, key=_lota_gradient_score)
+        elif self.patch_mode == "min":
+            selected_patch = min(patches, key=_lota_gradient_score)
+        else:
+            selected_patch = choice(patches)
+
+        return cv2.resize(
+            selected_patch,
+            (self.img_height, self.img_height),
+            interpolation=cv2.INTER_LINEAR,
+        )
+
+
 class DCTTransform:
     def __init__(self, mean_path, var_path, log_scale=True, epsilon=1e-12):
         self.log_scale = log_scale
@@ -320,5 +414,3 @@ class DCT_base_Rec_Module(nn.Module):
         x_maxmax1 = self.fold0(x_maxmax1)
 
         return x_minmin, x_maxmax, x_minmin1, x_maxmax1
-
-

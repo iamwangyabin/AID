@@ -1,0 +1,67 @@
+arch: "SPAIMFM"
+name: "SPAI_MFM_real_spectrum"
+
+model:
+  backbone_name: "vit_base_patch16_224"
+  pretrained: true
+  img_size: 224
+  masking_radius: 16
+  feature_layers: null
+  patch_factor: 1
+  with_matrix: false
+  input_is_normalized: false
+
+train:
+  pipeline: engine.spai_mfm_trainer
+  precision: 32
+  gpu_ids: [0]
+  train_epochs: 35
+  check_val_every_n_epoch: 1
+  seed: 1995
+  real_only: true
+  optimizer:
+    _target_: torch.optim.AdamW
+    _partial_: True
+    lr: 0.0005
+    betas: [0.9, 0.999]
+    weight_decay: 0.05
+
+  scheduler:
+    _target_: torch.optim.lr_scheduler.CosineAnnealingLR
+    _partial_: True
+    T_max: 35
+    eta_min: 0.00000025
+
+datasets:
+  base_path: "/home/yabin/DataDrive/DF-arrow-data"
+  train:
+    source:
+      - { target: data.ArrowDatasets,
+          data_root: '${datasets.base_path}/ForenSynths',
+          sub_sets: [ "airplane", "bird", "bottle", "car", "chair", "diningtable", "horse", "person", "sheep", "train",
+                      "bicycle", "boat", "bus", "cat", "cow", "dog", "motorbike", "pottedplant", "sofa", "tvmonitor" ],
+          split: 'train_binary' }
+
+    batch_size: 64
+    loader_workers: 16
+    trsf:
+      - _target_: torchvision.transforms.RandomCrop
+        size: 224
+      - _target_: torchvision.transforms.RandomHorizontalFlip
+        p: 0.5
+      - _target_: torchvision.transforms.ToTensor
+
+  val:
+    source:
+      - { target: data.ArrowDatasets,
+          data_root: '${datasets.base_path}/DIF',
+          sub_sets: [ 'dalle_2',  'dalle_mini',  'glide',  'mj',  'sd14',  'sd21'],
+          split: 'test',
+          benchmark_name: 'DIF' }
+
+    batch_size: 64
+    loader_workers: 16
+    trsf:
+      - _target_: torchvision.transforms.CenterCrop
+        size: 224
+      - _target_: torchvision.transforms.ToTensor

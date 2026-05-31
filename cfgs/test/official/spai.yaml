@@ -1,0 +1,45 @@
+arch: "SPAIModel"
+test_name: "SPAI"
+
+model:
+  backbone_name: "vit_base_patch16_224"
+  pretrained: true
+  mfm_checkpoint: null
+  resolution_mode: "arbitrary"
+  img_size: 224
+  patch_stride: 224
+  minimum_patches: 4
+  feature_extraction_batch_size: 64
+  masking_radius: 16
+  projection_dim: 1024
+  projection_layers: 2
+  patch_projection: true
+  patch_projection_per_feature: true
+  projector_last_layer_activation_type: null
+  original_image_features_branch: true
+  disable_reconstruction_similarity: false
+  attn_embed_dim: 512
+  num_heads: 8
+  cls_mlp_ratio: 3
+  dropout: 0.5
+  freeze_backbone: true
+  input_is_normalized: false
+
+eval_pipeline: utils.validate_plain
+resume:
+  path: ""
+  target: utils.resume_tools.no_resume
+
+datasets:
+  base_path: "/home/jwang/ybwork/data/DF-arrow"
+  source:
+    - { target: data.ArrowDatasets,
+        data_root: '${datasets.base_path}/DIF',
+        sub_sets: [ 'dalle_2',  'dalle_mini',  'glide',  'mj',  'sd14',  'sd21' ],
+        split: 'test',
+        benchmark_name: 'DIF' }
+
+  batch_size: 1
+  loader_workers: 16
+  trsf:
+    - _target_: torchvision.transforms.ToTensor
