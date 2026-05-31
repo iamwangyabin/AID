@@ -6,7 +6,7 @@ eval_pipeline: utils.validate_plain
 # training-free method, no checkpoint needed
 resume:
   path: null
-  target: torch.load
+  target: utils.resume_tools.no_resume
 
 model:
   # main hyper-params from your reference implementation

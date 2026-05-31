@@ -1,12 +1,12 @@
 # 如何在本仓库中实现和使用自定义方法
 
-本指南介绍如何在本仓库中添加和使用你自己的模型、数据集或后处理方法。通过注册机制，你可以方便地扩展本项目的功能。
+本指南介绍如何在本仓库中添加和使用你自己的模型或数据集类。
 
 ---
 
 ## 1. 实现自定义方法
 
-你可以实现一个新的模型、数据集类或后处理函数。例如，定义一个新的模型：
+你可以实现一个新的模型或数据集类。例如，定义一个新的模型：
 
 ```python
 import torch.nn as nn
@@ -26,11 +26,9 @@ class MyCustomModel(nn.Module):
 
 ## 2. 注册自定义方法
 
-仓库使用注册机制管理模型、数据集和后处理函数。相关注册表定义在`utils/registry.py`中：
+仓库当前使用注册机制管理模型。相关注册表定义在`utils/registry.py`中：
 
 - `MODELS`：模型
-- `DATASETS`：数据集
-- `POSTFUNCS`：后处理函数
 
 你可以通过装饰器或函数调用注册你的方法。
 
@@ -52,7 +50,7 @@ from utils.registry import MODELS
 MODELS.register_module(module=MyCustomModel)
 ```
 
-对于数据集和后处理函数，使用对应的`DATASETS`和`POSTFUNCS`注册表。
+数据集类当前在 YAML 配置中通过 `data.ArrowDatasets` 这类 dotted name 引用。
 
 ---
 
@@ -61,14 +59,13 @@ MODELS.register_module(module=MyCustomModel)
 在`cfgs/`目录下的yaml配置文件中，指定你注册的名称即可使用自定义方法。例如：
 
 ```yaml
+arch: "MyCustomModel"
 model:
-  name: MyCustomModel
-  params:
-    param1: value1
-    param2: value2
+  param1: value1
+  param2: value2
 ```
 
-训练脚本会根据配置自动从注册表中构建对应的实例。
+同时需要在`utils/network_factory.py`的`MODEL_MODULE_MAP`中加入模型导入路径；导入后的模块必须在`MODELS`中注册同名`arch`。
 
 ---
 
@@ -77,7 +74,7 @@ model:
 配置好yaml文件后，运行训练脚本：
 
 ```bash
-python train.py --config cfgs/your_config.yaml
+python train.py --cfg cfgs/your_config.yaml
 ```
 
 或使用shell脚本：

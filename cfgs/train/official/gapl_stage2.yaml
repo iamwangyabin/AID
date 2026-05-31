@@ -1,0 +1,80 @@
+# Official GAPL stage 2: LoRA fine-tune with generator-aware prototypes.
+# Download official weights first:
+#   python tools/download_gapl_weights.py
+arch: "GAPLModel"
+name: "gapl_stage2_community_forensics_small"
+
+model:
+  clip_model_name_or_path: "openai/clip-vit-large-patch14"
+  local_files_only: false
+  feature_dim: 1024
+  foren_dim: 128
+  n_prototype: 64
+  num_classes: 1
+  freeze_backbone: false
+  use_lora: true
+  lora_r: 16
+  lora_alpha: 32
+  lora_dropout: 0.1
+  lora_target_modules: ["q_proj", "k_proj", "v_proj"]
+  fe_path: "./networks/weights/gapl/stage1.pt"
+  proto_path: "./networks/weights/gapl/pca_3type_num64.pt"
+
+train:
+  pipeline: engine.gapl_trainer
+  gpu_ids: [0]
+  train_epochs: 10
+  check_val_every_n_epoch: 1
+  seed: 42
+  precision: "16"
+  optimizer:
+    _target_: torch.optim.AdamW
+    _partial_: True
+    lr: 1e-4
+    weight_decay: 1e-2
+  scheduler:
+    _target_: torch.optim.lr_scheduler.CosineAnnealingLR
+    _partial_: True
+    T_max: ${train.train_epochs}
+
+datasets:
+  train:
+    source:
+      - { target: data.CommunityForensicsDatasets,
+          data_root: "OwensLab/CommunityForensics-Small",
+          sub_sets: ["default"],
+          split: "train[:95%]" }
+    batch_size: 64
+    loader_workers: 8
+    trsf:
+      - _target_: torchvision.transforms.Resize
+        size: 256
+      - _target_: data.GAPLRandomStateAugmentation
+        resize_size: 256
+        crop_size: 224
+        auglist: "JPEGinMemory,RandomResizeWithRandomIntpl,RandomCrop,RandomHorizontalFlip,RandomVerticalFlip,RRCWithRandomIntpl,RandomRotation,RandomTranslate,RandomShear,RandomPadding,RandomCutout"
+        min_augs: "0"
+        max_augs: "2"
+      - _target_: torchvision.transforms.RandomCrop
+        size: 224
+      - _target_: torchvision.transforms.ToTensor
+      - _target_: torchvision.transforms.Normalize
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+  val:
+    source:
+      - { target: data.CommunityForensicsDatasets,
+          data_root: "OwensLab/CommunityForensics-Small",
+          sub_sets: ["default"],
+          split: "train[95%:]" }
+    batch_size: 64
+    loader_workers: 8
+    trsf:
+      - _target_: torchvision.transforms.Resize
+        size: 256
+      - _target_: torchvision.transforms.CenterCrop
+        size: 224
+      - _target_: torchvision.transforms.ToTensor
+      - _target_: torchvision.transforms.Normalize
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]

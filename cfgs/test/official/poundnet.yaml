@@ -1,4 +1,4 @@
-arch: "poundnet"
+arch: "PoundNet"
 test_name: "Poundnet_4"
 
 eval_pipeline: utils.validate_poundnet

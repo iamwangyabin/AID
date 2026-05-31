@@ -93,23 +93,23 @@ class FreqNet(nn.Module):
     def __init__(self, block=Bottleneck, layers=[3, 4], num_classes=1, zero_init_residual=False):
         super(FreqNet, self).__init__()
 
-        self.weight1 = nn.Parameter(torch.randn((64, 3, 1, 1)).cuda())
-        self.bias1 = nn.Parameter(torch.randn((64,)).cuda())
+        self.weight1 = nn.Parameter(torch.randn((64, 3, 1, 1)))
+        self.bias1 = nn.Parameter(torch.randn((64,)))
         self.realconv1 = conv1x1(64, 64, stride=1)
         self.imagconv1 = conv1x1(64, 64, stride=1)
 
-        self.weight2 = nn.Parameter(torch.randn((64, 64, 1, 1)).cuda())
-        self.bias2 = nn.Parameter(torch.randn((64,)).cuda())
+        self.weight2 = nn.Parameter(torch.randn((64, 64, 1, 1)))
+        self.bias2 = nn.Parameter(torch.randn((64,)))
         self.realconv2 = conv1x1(64, 64, stride=1)
         self.imagconv2 = conv1x1(64, 64, stride=1)
 
-        self.weight3 = nn.Parameter(torch.randn((256, 256, 1, 1)).cuda())
-        self.bias3 = nn.Parameter(torch.randn((256,)).cuda())
+        self.weight3 = nn.Parameter(torch.randn((256, 256, 1, 1)))
+        self.bias3 = nn.Parameter(torch.randn((256,)))
         self.realconv3 = conv1x1(256, 256, stride=1)
         self.imagconv3 = conv1x1(256, 256, stride=1)
 
-        self.weight4 = nn.Parameter(torch.randn((256, 256, 1, 1)).cuda())
-        self.bias4 = nn.Parameter(torch.randn((256,)).cuda())
+        self.weight4 = nn.Parameter(torch.randn((256, 256, 1, 1)))
+        self.bias4 = nn.Parameter(torch.randn((256,)))
         self.realconv4 = conv1x1(256, 256, stride=1)
         self.imagconv4 = conv1x1(256, 256, stride=1)
 
@@ -258,5 +258,4 @@ class FreqNet(nn.Module):
         x = x.view(x.size(0), -1)
         x = self.fc1(x)
         return {'logits': x}
-
 

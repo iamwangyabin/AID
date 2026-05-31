@@ -1,15 +1,14 @@
-import io
-import sys
-import os
 import csv
 import argparse
 import hydra
-import torch.utils.data
 import pickle
 
+import torch
+import torch.utils.data
+
 import data
-import utils
 from utils.common import load_config_with_cli
+from utils.evaluator import evaluate_model
 from utils.network_factory import get_model
 
 
@@ -21,21 +20,23 @@ if __name__ == '__main__':
     conf = hydra.utils.instantiate(conf)
 
     model = get_model(conf)
-    eval(conf.resume.target)(model, conf.resume.path)
-    model.cuda()
+    resume_fn = hydra.utils.get_method(conf.resume.target)
+    resume_fn(model, conf.resume.path)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
     model.eval()
 
     all_results = []
     save_raw_results = {}
 
     for sub_data in conf.datasets.source:
-        data_root = sub_data.data_root
         for sub_set in sub_data.sub_sets:
-            dataset = eval(sub_data.target)(sub_data.data_root, conf.datasets.trsf,subset=sub_set, split=sub_data.split)
+            dataset_cls = hydra.utils.get_class(sub_data.target)
+            dataset = dataset_cls(sub_data.data_root, conf.datasets.trsf, subset=sub_set, split=sub_data.split)
             data_loader = torch.utils.data.DataLoader(dataset, batch_size=conf.datasets.batch_size,
-                                                      num_workers=conf.datasets.loader_workers, shuffle=True)
+                                                      num_workers=conf.datasets.loader_workers, shuffle=False)
 
-            result = eval(conf.eval_pipeline)(model, data_loader)
+            result = evaluate_model(model, data_loader, predictor=conf.eval_pipeline, device=device, desc=f"{sub_data.benchmark_name} {sub_set}")
 
             ap = result['ap']
             auc = result['auc']

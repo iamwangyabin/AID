@@ -1,4 +1,4 @@
-arch: "npr"
+arch: "NPRModel"
 test_name: "NPR_progan"
 # in the original repo, we can reproduce:
 #=================================
@@ -102,5 +102,4 @@ datasets:
     - _target_: torchvision.transforms.Normalize
       mean: [0.485, 0.456, 0.406]
       std: [0.229, 0.224, 0.225]
-
 

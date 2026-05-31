@@ -1,3 +1,4 @@
+# Legacy/unsupported: AIDE is not registered in the current model factory.
 arch: "aide"
 test_name: "AIDE_official"
 
@@ -25,7 +26,6 @@ datasets:
       method: "JPEG"
       qf: [70, 100]
     - _target_: torchvision.transforms.ToTensor
-
 
 
 

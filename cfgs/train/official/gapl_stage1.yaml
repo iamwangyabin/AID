@@ -1,0 +1,66 @@
+# Official GAPL stage 1: train CLIP forensic projection, then extract prototypes.
+# Official source: https://github.com/UltraCapture/GAPL
+arch: "GAPLStage1Model"
+name: "gapl_stage1"
+
+model:
+  clip_model_name_or_path: "openai/clip-vit-large-patch14"
+  local_files_only: false
+  feature_dim: 1024
+  foren_dim: 128
+  num_classes: 1
+  freeze_backbone: true
+
+train:
+  pipeline: engine.gapl_stage1_trainer
+  gpu_ids: [0]
+  train_epochs: 2
+  check_val_every_n_epoch: 1
+  seed: 42
+  precision: "16"
+  optimizer:
+    _target_: torch.optim.AdamW
+    _partial_: True
+    lr: 1e-4
+    weight_decay: 1e-2
+  scheduler:
+    _target_: torch.optim.lr_scheduler.CosineAnnealingLR
+    _partial_: True
+    T_max: ${train.train_epochs}
+
+datasets:
+  # Point this to a CNNDetection/CNNSpot-style directory:
+  # ${base_path}/train/<subset>/0_real and ${base_path}/train/<subset>/1_fake
+  base_path: "/path/to/CNNDetection"
+  train:
+    source:
+      - { target: data.BinaryDatasets,
+          data_root: '${datasets.base_path}',
+          sub_sets: ["car", "cat", "chair", "horse"],
+          split: "train" }
+    batch_size: 32
+    loader_workers: 8
+    trsf:
+      - _target_: torchvision.transforms.RandomCrop
+        size: 224
+        pad_if_needed: true
+        padding_mode: "constant"
+      - _target_: torchvision.transforms.ToTensor
+      - _target_: torchvision.transforms.Normalize
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+  val:
+    source:
+      - { target: data.BinaryDatasets,
+          data_root: '${datasets.base_path}',
+          sub_sets: ["car"],
+          split: "test" }
+    batch_size: 64
+    loader_workers: 8
+    trsf:
+      - _target_: torchvision.transforms.CenterCrop
+        size: 224
+      - _target_: torchvision.transforms.ToTensor
+      - _target_: torchvision.transforms.Normalize
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]

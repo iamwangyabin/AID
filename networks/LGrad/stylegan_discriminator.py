@@ -207,8 +207,6 @@ class StyleGANDiscriminator(nn.Module):
                                  f'images ({image.shape[0]}) and '
                                  f'`label_size` equals to {self.label_size}!\n'
                                  f'But `{label.shape}` is received!')
-        # import pdb;pdb.set_trace()
-
         for res_log2 in range(self.final_res_log2, self.init_res_log2 - 1, -1):
             block_idx = current_lod = self.final_res_log2 - res_log2
             if current_lod <= lod < current_lod + 1:
@@ -455,7 +453,6 @@ class ConvBlock(nn.Module):
         x = self.mbstd(x)
         x = self.blur(x)
         weight = self.weight * self.wscale
-        # import pdb; pdb.set_trace()
 
         bias = self.bias * self.bscale if self.bias is not None else None
         if self.use_stride:
@@ -552,7 +549,6 @@ class DenseBlock(nn.Module):
 #         self.wscale = wscale
 #     def forward(self, x):
 #         weight_scaled = self.weight * self.wscale
-#         import pdb;pdb.set_trace()
 #         return F.conv2d(x, weight_scaled, self.conv.bias, self.conv.stride, self.conv.padding, self.conv.dilation, self.conv.groups)
 #
 #

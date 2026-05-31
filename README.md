@@ -6,12 +6,12 @@ AID is a comprehensive toolbox and benchmark suite for detecting AI-generated (s
 
 ## Features
 
-- Modular PyTorch + Lightning framework
+- Modular PyTorch training and evaluation framework
 - Supports multiple detection architectures (e.g., CLIP-based, CNNs, diffusion models)
 - Configurable via YAML files with Hydra
 - Extensive dataset support and augmentation
 - Integrated experiment tracking with Weights & Biases (WandB)
-- SLURM-compatible training/testing scripts
+- Shell templates for training/testing entry points
 - Benchmarking on diverse datasets
 
 
@@ -38,7 +38,9 @@ Support methods:
 | [AIDE](https://github.com/shilinyan99/AIDE) | ICLR 2025 | ✘ | ✔ |
 | [FIRE](https://github.com/Chuchad/FIRE) | CVPR 2025 | ✔ | ✔ |
 | [B-Free](https://github.com/grip-unina/B-Free) | CVPR 2025 | ✔ | ✔ |
+| [GAPL](https://github.com/UltraCapture/GAPL) | CVPR 2026 | ✔ | ✔ |
 | [PoundNet](https://github.com/iamwangyabin/PoundNet) | TPAMI 2026 | ✔ | ✔ |
+| [CLIDE](https://github.com/FujitsuResearch/domain-adaptive-image-detection) | WACV 2026 | ✘ | ✔ |
 
 
 Support datasets:
@@ -76,7 +78,7 @@ This will install packages including:
 - timm (PyTorch Image Models)
 - Hydra
 - WandB
-- Lightning
+- PyTorch
 - Albumentations
 - scikit-learn
 - OpenCV
@@ -102,8 +104,8 @@ This will:
 
 **Example configs:**
 
-- `cfgs/train/fakecoco/ojha_fcoco_sd3.yaml`
-- `cfgs/train/fakepop/rine_fcoco_sd15.yaml`
+- `cfgs/train/official/rine_official.yaml`
+- `cfgs/train/official/npr.yaml`
 
 You can also customize training via command-line overrides.
 
@@ -123,12 +125,12 @@ This will:
 
 **Example configs:**
 
-- `cfgs/test/t2ibenchmarks/rine_fakecoco_sd15.yaml`
-- `cfgs/test/t2ibenchmarks/rine_fakepop_sd15.yaml`
+- `cfgs/test/official/rine_official.yaml`
+- `cfgs/test/official/npr.yaml`
 
-### SLURM Batch Script
+### Shell Scripts
 
-You can adapt `train.sh` for SLURM-based cluster training/testing. It contains example commands and environment setups.
+You can adapt `train.sh` and `test.sh` for local or cluster runs. Set `AID_TRAIN_CFG` or `AID_TEST_CFG` to override the default config path.
 
 ---
 
@@ -140,10 +142,11 @@ AID/
 ├── data/             # Dataset loaders and augmentations
 ├── engine/           # Training engine modules
 ├── networks/         # Model architectures
-├── tools/            # Utility scripts and notebooks
+├── tools/            # Utility scripts
+├── legacy/           # Archived old configs, scripts, and dataset recipes
 ├── train.py          # Training script
 ├── test.py           # Testing script
-├── train.sh          # SLURM batch script example
+├── train.sh          # training shell template
 ├── requirements.txt  # Python dependencies
 ├── LICENSE           # License file
 └── README.md         # This file
@@ -155,7 +158,7 @@ AID/
 
 If you use this toolbox in your research, please cite:
 
-See `bibtex.md` for citation details.
+See `docs/bibtex.md` for citation details.
 
 ---
 
@@ -168,7 +171,7 @@ This project is licensed under the terms of the LICENSE file.
 ## Acknowledgments
 
 - OpenAI CLIP
-- PyTorch Lightning
+- PyTorch
 - Hydra
 - WandB
 - And all contributors

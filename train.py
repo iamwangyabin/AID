@@ -3,6 +3,7 @@ import hydra
 import argparse
 import wandb
 import datetime
+import math
 from itertools import islice
 
 import torch
@@ -15,23 +16,50 @@ import engine
 import data
 import networks
 from utils.common import load_config_with_cli, archive_files, seed_everything
+from utils.evaluator import evaluate_model, to_train_metrics
 
+
+def resolve_target(path):
+    if callable(path):
+        return path
+    if not isinstance(path, str):
+        raise TypeError(f"Config target must be a string or callable, got {type(path).__name__}.")
+    if hasattr(hydra.utils, "get_object"):
+        target = hydra.utils.get_object(path)
+    else:
+        try:
+            target = hydra.utils.get_class(path)
+        except Exception:
+            target = hydra.utils.get_method(path)
+    if not callable(target):
+        raise TypeError(f'Config target "{path}" resolved to non-callable {type(target).__name__}.')
+    return target
 
 
 def build_dataloader(conf):
     train_datasets = []
     for sub_data in conf.datasets.train.source:
+        dataset_cls = resolve_target(sub_data.target)
         for sub_set in sub_data.sub_sets:
-            train_data = eval(sub_data.target)(sub_data.data_root, conf.datasets.train.trsf,
-                                               subset=sub_set, split=sub_data.split)
+            train_data = dataset_cls(
+                sub_data.data_root,
+                conf.datasets.train.trsf,
+                subset=sub_set,
+                split=sub_data.split,
+            )
             train_datasets.append(train_data)
     train_datasets = ConcatDataset(train_datasets)
 
     val_datasets = []
     for sub_data in conf.datasets.val.source:
+        dataset_cls = resolve_target(sub_data.target)
         for sub_set in sub_data.sub_sets:
-            val_data = eval(sub_data.target)(sub_data.data_root, conf.datasets.val.trsf,
-                                          subset=sub_set, split=sub_data.split)
+            val_data = dataset_cls(
+                sub_data.data_root,
+                conf.datasets.val.trsf,
+                subset=sub_set,
+                split=sub_data.split,
+            )
             val_datasets.append(val_data)
     val_datasets = ConcatDataset(val_datasets)
 
@@ -73,6 +101,9 @@ def resolve_amp_dtype(precision, device):
     if precision in {"16", "16-mixed", "fp16", "float16"}:
         return torch.float16
     if precision in {"bf16", "bf16-mixed", "bfloat16"}:
+        if not torch.cuda.is_bf16_supported():
+            print("bf16 precision requested but this CUDA device does not support bf16; using fp16.")
+            return torch.float16
         return torch.bfloat16
     return None
 
@@ -135,22 +166,52 @@ def optimizer_lr(optimizer):
     return optimizer.param_groups[0]["lr"]
 
 
-def run_sanity_check(model, val_loader, device, amp_dtype, num_steps):
-    if num_steps <= 0:
-        return
-
+def validate_with_trainer_steps(model, val_loader, device, amp_dtype, epoch, epochs, max_steps=None, desc=None):
     model.eval()
     model.clear_validation_outputs()
-    total = min(num_steps, len(val_loader))
-    pbar = tqdm(islice(val_loader, num_steps), total=total, desc="Sanity check", dynamic_ncols=True, leave=False)
+    model.consume_logged_metrics()
+
+    total = min(max_steps, len(val_loader)) if max_steps is not None else len(val_loader)
+    iterator = islice(val_loader, max_steps) if max_steps is not None else val_loader
+    pbar = tqdm(iterator, total=total, desc=desc or f"Epoch {epoch}/{epochs} val", dynamic_ncols=True)
     with torch.no_grad():
         for batch in pbar:
             batch = move_to_device(batch, device)
             with autocast_context(device, amp_dtype):
                 model.validation_step(batch)
 
-    model.clear_validation_outputs()
-    model.consume_logged_metrics()
+    model.on_validation_epoch_end()
+    return model.consume_logged_metrics()
+
+
+def run_sanity_check(model, val_loader, device, amp_dtype, num_steps, predictor=None):
+    if num_steps <= 0:
+        return
+
+    eval_model = getattr(model, "model", model)
+    try:
+        evaluate_model(
+            eval_model,
+            val_loader,
+            predictor=predictor,
+            device=device,
+            amp_dtype=amp_dtype,
+            desc="Sanity check",
+            max_batches=num_steps,
+        )
+    except ValueError:
+        validate_with_trainer_steps(
+            model,
+            val_loader,
+            device,
+            amp_dtype,
+            epoch=0,
+            epochs=0,
+            max_steps=num_steps,
+            desc="Sanity check",
+        )
+        model.clear_validation_outputs()
+        model.consume_logged_metrics()
 
 
 def train_one_epoch(model, train_loader, optimizer, scaler, device, amp_dtype, epoch, epochs, accumulation_steps,
@@ -198,20 +259,20 @@ def train_one_epoch(model, train_loader, optimizer, scaler, device, amp_dtype, e
     return total_loss / max(total_samples, 1), global_step
 
 
-def validate_one_epoch(model, val_loader, device, amp_dtype, epoch, epochs):
-    model.eval()
-    model.clear_validation_outputs()
-    model.consume_logged_metrics()
-
-    pbar = tqdm(val_loader, desc=f"Epoch {epoch}/{epochs} val", dynamic_ncols=True)
-    with torch.no_grad():
-        for batch in pbar:
-            batch = move_to_device(batch, device)
-            with autocast_context(device, amp_dtype):
-                model.validation_step(batch)
-
-    model.on_validation_epoch_end()
-    return model.consume_logged_metrics()
+def validate_one_epoch(model, val_loader, device, amp_dtype, epoch, epochs, predictor=None):
+    eval_model = getattr(model, "model", model)
+    try:
+        result = evaluate_model(
+            eval_model,
+            val_loader,
+            predictor=predictor,
+            device=device,
+            amp_dtype=amp_dtype,
+            desc=f"Epoch {epoch}/{epochs} val",
+        )
+        return to_train_metrics(result)
+    except ValueError:
+        return validate_with_trainer_steps(model, val_loader, device, amp_dtype, epoch, epochs)
 
 
 def step_scheduler(scheduler, metrics):
@@ -219,7 +280,7 @@ def step_scheduler(scheduler, metrics):
         return
 
     if isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
-        monitor = metrics.get("val_ap_epoch")
+        monitor = metrics.get("val_ap_epoch", metrics.get("val_mfm_loss_epoch"))
         if monitor is not None:
             scheduler.step(monitor)
         return
@@ -247,6 +308,22 @@ def metric_as_float(metrics, key):
     if torch.is_tensor(value):
         value = value.detach().float().cpu().item()
     return float(value)
+
+
+def checkpoint_metric(metrics):
+    for key, mode in (("val_ap_epoch", "max"), ("val_mfm_loss_epoch", "min")):
+        value = metric_as_float(metrics, key)
+        if value is not None and math.isfinite(value):
+            return key, value, mode
+    return None, None, None
+
+
+def is_better_metric(value, best_value, mode):
+    if best_value is None:
+        return True
+    if mode == "min":
+        return value < best_value
+    return value > best_value
 
 
 def init_wandb(conf, run_name):
@@ -292,7 +369,7 @@ if __name__ == '__main__':
     if os.getenv("LOCAL_RANK", '0') == '0':
         archive_files(today_str, exclude_dirs=['logs', 'wandb', '.git', 'exp_results'])
 
-    model = eval(conf.train.pipeline)(opt=conf)
+    model = resolve_target(conf.train.pipeline)(opt=conf)
     torch.set_float32_matmul_precision('high')
     device = resolve_device(conf.train.gpu_ids)
     model.to(device)
@@ -300,14 +377,22 @@ if __name__ == '__main__':
     optimizer, scheduler = build_optimizer_and_scheduler(model)
     amp_dtype = resolve_amp_dtype(conf.train.get('precision', "16"), device)
     scaler = build_grad_scaler(device, amp_dtype)
+    eval_predictor = conf.train.get("eval_predictor", conf.get("eval_pipeline", None))
 
     train_epochs = int(conf.train.train_epochs)
     check_val_every_n_epoch = int(conf.train.check_val_every_n_epoch)
     accumulation_steps = conf.train.get('gradient_accumulation_steps', 1)
     log_dir = os.path.join('logs', today_str)
-    best_ap, best_path, global_step = None, None, 0
+    best_value, best_path, global_step = None, None, 0
 
-    run_sanity_check(model, val_loader, device, amp_dtype, int(conf.train.get('num_sanity_val_steps', 2)))
+    run_sanity_check(
+        model,
+        val_loader,
+        device,
+        amp_dtype,
+        int(conf.train.get('num_sanity_val_steps', 2)),
+        predictor=eval_predictor,
+    )
 
     for epoch in range(1, train_epochs + 1):
         train_loss, global_step = train_one_epoch(
@@ -325,17 +410,17 @@ if __name__ == '__main__':
         metrics = {"train_loss": train_loss, "lr": optimizer_lr(optimizer)}
 
         if epoch % check_val_every_n_epoch == 0:
-            metrics.update(validate_one_epoch(model, val_loader, device, amp_dtype, epoch, train_epochs))
+            metrics.update(validate_one_epoch(model, val_loader, device, amp_dtype, epoch, train_epochs, predictor=eval_predictor))
 
         step_scheduler(scheduler, metrics)
         log_metrics(wandb_run, metrics, global_step, epoch)
 
-        current_ap = metric_as_float(metrics, "val_ap_epoch")
-        if current_ap is not None and (best_ap is None or current_ap > best_ap):
+        metric_key, metric_value, metric_mode = checkpoint_metric(metrics)
+        if metric_key is not None and is_better_metric(metric_value, best_value, metric_mode):
             if best_path is not None and os.path.exists(best_path):
                 os.remove(best_path)
-            best_ap = current_ap
-            best_path = os.path.join(log_dir, f"epoch={epoch:02d}-val_ap_epoch={current_ap:.4f}.ckpt")
+            best_value = metric_value
+            best_path = os.path.join(log_dir, f"epoch={epoch:02d}-{metric_key}={metric_value:.4f}.ckpt")
             save_checkpoint(best_path, model, optimizer, scheduler, epoch, global_step, metrics)
 
         save_checkpoint(os.path.join(log_dir, "last.ckpt"), model, optimizer, scheduler, epoch, global_step, metrics)

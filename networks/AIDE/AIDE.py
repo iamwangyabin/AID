@@ -212,7 +212,12 @@ class AIDE_Model(nn.Module):
         self.model_max = ResNet(Bottleneck, [3, 4, 6, 3])
 
         if resnet_path is not None:
-            pretrained_dict = torch.load(resnet_path, map_location='cpu')
+            try:
+                pretrained_dict = torch.load(resnet_path, map_location='cpu', weights_only=True)
+            except TypeError:
+                pretrained_dict = torch.load(resnet_path, map_location='cpu')
+            if isinstance(pretrained_dict, dict) and 'state_dict' in pretrained_dict:
+                pretrained_dict = pretrained_dict['state_dict']
 
             model_min_dict = self.model_min.state_dict()
             model_max_dict = self.model_max.state_dict()
@@ -223,6 +228,8 @@ class AIDE_Model(nn.Module):
                     model_max_dict[k] = pretrained_dict[k]
                 else:
                     print(f"Skipping layer {k} because of size mismatch")
+            self.model_min.load_state_dict(model_min_dict)
+            self.model_max.load_state_dict(model_max_dict)
 
         self.fc = Mlp(2048 + 256, 1024, 2)
 

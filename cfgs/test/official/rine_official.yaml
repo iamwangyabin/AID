@@ -1,6 +1,6 @@
 # This configuration can fully reproduce the RINE results on ForenSynths.
 # However, it cannot reproduce the results on SynthBuster (downloaded from https://github.com/grip-unina/ClipBased-SyntheticImageDetection/tree/main).
-arch: "rine"
+arch: "RINEModel"
 test_name: "RINE_official_resize"
 
 eval_pipeline: utils.validate_plain
@@ -106,7 +106,6 @@ datasets:
     - _target_: torchvision.transforms.Normalize
       mean: [0.48145466, 0.4578275, 0.40821073]
       std: [0.26862954, 0.26130258, 0.27577711]
-
 
 
 

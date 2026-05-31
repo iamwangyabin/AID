@@ -214,6 +214,18 @@ https://github.com/sohailahmedkhan/CLIPping-the-Deception
 }
 ```
 
+#### GAPL
+Scaling Up AI-Generated Image Detection with Generator-Aware Prototypes
+https://github.com/UltraCapture/GAPL
+```
+@article{qin2025Scaling,
+  title={Scaling Up AI-Generated Image Detection with Generator-Aware Prototypes},
+  author={Qin, Ziheng and Ji, Yuheng and Tao, Renshuai and Tian, Yuxuan and Liu, Yuyang and Wang, Yipu and Zheng, Xiaolong},
+  journal={arXiv preprint arXiv:2512.12982},
+  year={2025}
+}
+```
+
 
 #### 
 
@@ -235,7 +247,19 @@ https://github.com/davide-coccomini/Detecting-Images-Generated-by-Diffusers
 F3Net 
 Spec
 
-
+#### CLIDE
+General and Domain-Specific Zero-shot Detection of Generated Images via Conditional Likelihood
+https://github.com/FujitsuResearch/domain-adaptive-image-detection
+```
+@inproceedings{betser2026clide,
+  title     = {General and Domain-Specific Zero-shot Detection of Generated Images via Conditional Likelihood},
+  author    = {Betser, Roy and Hofman, Omer and Vainshtein, Roman and Gilboa, Guy},
+  booktitle = {Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)},
+  year      = {2026},
+  eprint    = {2512.05590},
+  archivePrefix = {arXiv},
+}
+```
 
 
 

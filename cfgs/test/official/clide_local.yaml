@@ -1,0 +1,45 @@
+arch: "CLIDEModel"
+test_name: "CLIDE_local_general"
+
+eval_pipeline: utils.validate_plain
+
+resume:
+  path: null
+  target: utils.resume_tools.no_resume
+
+model:
+  name: "ViT-L/14"
+  mode: "local"
+  # Official CLIDE representative CLIP embeddings. Download with:
+  #   python tools/download_clide_official_stats.py --domain general --kind local
+  rep_mat_path: "./networks/weights/clide/rep_matrix_general.pt"
+
+  k: 500
+  m: 400
+  score_sign: -1.0
+  threshold: 0.0
+  temperature: 1000.0
+
+  image_size: 224
+  resize_shorter_edge: 224
+  interpolation: "bicubic"
+
+datasets:
+  base_path: "/path/to/DF-arrow-data"
+  source:
+    - { target: data.ArrowDatasets,
+        data_root: '${datasets.base_path}/DIF',
+        sub_sets: [ 'dalle_2', 'dalle_mini', 'glide', 'mj', 'sd14', 'sd21' ],
+        split: 'test',
+        benchmark_name: 'DIF' }
+
+  # Local whitening runs an eigendecomposition per image. Keep batches modest.
+  batch_size: 8
+  loader_workers: 8
+  trsf:
+    - _target_: torchvision.transforms.Resize
+      size: 224
+      antialias: true
+    - _target_: torchvision.transforms.CenterCrop
+      size: 224
+    - _target_: torchvision.transforms.ToTensor

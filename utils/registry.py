@@ -40,7 +40,7 @@ class Registry:
         return len(self._module_dict)
 
     def __contains__(self, key):
-        return self.get(key) is not None
+        return key in self._module_dict
 
     def __repr__(self):
         table = Table(title=f'Registry of {self._name}')
@@ -154,5 +154,3 @@ class Registry:
 
 # Global registries
 MODELS = Registry('MODELS')
-DATASETS = Registry('DATASETS')
-POSTFUNCS = Registry('POSTFUNCS')

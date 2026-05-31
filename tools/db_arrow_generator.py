@@ -70,6 +70,23 @@ def load_mapping(mapping_path):
         mapping = json.load(file)
     return mapping
 
+
+def copy_json_files(json_dir, arrow_dir):
+    if os.path.isfile(json_dir):
+        output_path = os.path.join(arrow_dir, os.path.basename(json_dir))
+        if os.path.abspath(json_dir) != os.path.abspath(output_path):
+            shutil.copy2(json_dir, output_path)
+        return
+
+    for file_name in os.listdir(json_dir):
+        if not file_name.endswith('.json'):
+            continue
+        source_path = os.path.join(json_dir, file_name)
+        output_path = os.path.join(arrow_dir, file_name)
+        if os.path.abspath(source_path) != os.path.abspath(output_path):
+            shutil.copy2(source_path, output_path)
+
+
 def make_arrow(json_dir, dataset_root, arrow_dir, pool_num):
     print(json_dir)
     print(arrow_dir)
@@ -142,11 +159,12 @@ def make_arrow(json_dir, dataset_root, arrow_dir, pool_num):
     dataset = load_from_disk(arrow_dir)
     output_path = os.path.join(arrow_dir, 'mapping.json')
     image_path_to_index = build_and_save_mapping(dataset, output_path)
+    copy_json_files(json_dir, arrow_dir)
 
 
 if __name__ == '__main__':
     if len(sys.argv) != 5:
-        print("Usage: python make_arrow.py ${json_dir} ${dataset_root} ${output_arrow_dir} ${pool_num}")
+        print("Usage: python tools/db_arrow_generator.py ${json_dir} ${dataset_root} ${output_arrow_dir} ${pool_num}")
         print("json_dir: The directory containing your JSON files.")
         print("dataset_root: The root directory where images are stored.")
         print("output_arrow_dir: The path for storing the created Arrow file.")

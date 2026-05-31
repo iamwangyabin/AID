@@ -12,7 +12,7 @@ A configuration file usually contains the following sections:
 
 ### 1. Metadata
 
-- `arch`: The model architecture name (e.g., `"rine"`, `"aide"`)
+- `arch`: The registered model architecture name (e.g., `"RINEModel"`, `"NPRModel"`)
 - `test_name`: A descriptive name for the experiment or test
 - Comments can be added using `#` to describe the config
 
@@ -157,7 +157,7 @@ trsf:
 ## Example Snippet
 
 ```yaml
-arch: "rine"
+arch: "RINEModel"
 test_name: "RINE_official_resize"
 
 eval_pipeline: utils.validate_plain

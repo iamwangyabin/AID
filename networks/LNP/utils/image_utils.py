@@ -37,7 +37,6 @@ def load_npy(filepath):
 def load_img(filepath, noise_type=None):
     # img = lycon.load(filepath)
     img = np.array(Image.open(filepath).convert('RGB'))
-    # import pdb;pdb.set_trace()
     img = img.astype(np.float32)
     img = img/255.
     return img

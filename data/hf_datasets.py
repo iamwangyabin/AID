@@ -105,3 +105,43 @@ class HFIMLDDatasets(Dataset):
             image = self.transform_chain(image)
         return image, label
 
+
+class CommunityForensicsDatasets(Dataset):
+    """Hugging Face CommunityForensics dataset adapter used by official GAPL stage-2."""
+
+    def __init__(self, data_root, trsf, subset=None, split='train'):
+        self.dataset = load_dataset(data_root, split=split)
+        self.transform_chain = transforms.Compose(trsf) if trsf else None
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def _load_image(self, sample):
+        image = sample.get('image')
+        if image is not None:
+            return image.convert('RGB')
+
+        image_data = sample.get('image_data')
+        if image_data is not None:
+            if isinstance(image_data, bytes):
+                return Image.open(io.BytesIO(image_data)).convert('RGB')
+            if isinstance(image_data, dict) and 'bytes' in image_data:
+                return Image.open(io.BytesIO(image_data['bytes'])).convert('RGB')
+
+        for key in ('jpg', 'webp', 'png'):
+            if key in sample:
+                value = sample[key]
+                if hasattr(value, 'convert'):
+                    return value.convert('RGB')
+                return Image.open(io.BytesIO(value)).convert('RGB')
+
+        raise KeyError("CommunityForensics sample does not contain image, image_data, jpg, webp, or png.")
+
+    def __getitem__(self, idx):
+        sample = self.dataset[idx]
+        image = self._load_image(sample)
+        label = int(sample['label'])
+
+        if self.transform_chain:
+            image = self.transform_chain(image)
+        return image, label

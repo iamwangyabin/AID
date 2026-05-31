@@ -1,6 +1,12 @@
 hydra-core
 wandb
 rich
+torch
+torchvision
+numpy
+Pillow
+pandas
+scipy
 datasets
 tqdm
 albumentations
@@ -8,7 +14,9 @@ scikit-learn
 scikit-image
 opencv-python
 diffusers
+transformers
+peft
+huggingface_hub
+pytorch-wavelets
 git+https://github.com/rwightman/pytorch-image-models.git@v0.9.12
 git+https://github.com/openai/CLIP.git
-
-

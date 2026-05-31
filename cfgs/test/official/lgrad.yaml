@@ -1,5 +1,5 @@
-arch: "cnn"
-test_name: "LNP_jpgrand_progan_224"
+arch: "CNNDet"
+test_name: "LGrad_jpgrand_progan_224"
 
 eval_pipeline: utils.validate_lgrad
 

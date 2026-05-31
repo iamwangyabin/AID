@@ -1,9 +1,5 @@
-import torch
-import torchvision
 import importlib
-import sys
-from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Any, Optional
 
 from utils.registry import MODELS
 
@@ -23,6 +19,8 @@ MODEL_MODULE_MAP = {
     'ManifoldInducedBiases': 'networks.sdv14_detector',
     'RIGIDModel': 'networks.rigid_detector',
     'WaRPADModel': 'networks.warpad_detector',
+    'CLIDEModel': 'networks.clide_detector',
+    'CLIDE': 'networks.clide_detector',
     'FIREModel': 'networks.fire_detector',
     'FIRE': 'networks.fire_detector',
     
@@ -34,11 +32,19 @@ MODEL_MODULE_MAP = {
     'VIBNet': 'networks.vibnet_detector',
     'SPAIModel': 'networks.spai_detector',
     'SPAIMFM': 'networks.spai_detector',
+    'GAPLStage1Model': 'networks.gapl_detector',
+    'GAPLClipModel': 'networks.gapl_detector',
+    'GAPLModel': 'networks.gapl_detector',
+    'GAPL': 'networks.gapl_detector',
+    'gapl': 'networks.gapl_detector',
 
 }
 
 def load_model_module(model_name: str) -> Optional[Any]:
     module_path = MODEL_MODULE_MAP.get(model_name)
+    if module_path is None:
+        available = ", ".join(sorted(MODEL_MODULE_MAP))
+        raise KeyError(f'Unknown model arch "{model_name}". Available arch names: {available}')
     module = importlib.import_module(module_path)
     return module
 
@@ -48,8 +54,11 @@ def get_model(conf):
     load_model_module(model_name)
 
     if model_name in MODELS:
+        if model_name == "PoundNet":
+            return MODELS.build(model_name, conf)
         if hasattr(conf, 'model'):
             kwargs = conf.model
         else:
             kwargs = {}
         return MODELS.build(model_name, **kwargs)
+    raise KeyError(f'"{model_name}" was imported but did not register itself in MODELS.')

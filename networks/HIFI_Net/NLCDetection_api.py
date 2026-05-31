@@ -202,8 +202,8 @@ class BranchCLS(nn.Module):
 class NLCDetection(nn.Module):
     def __init__(self):
         super(NLCDetection, self).__init__()
-        self.split_tensor_1 = torch.tensor([1, 3]).cuda()
-        self.split_tensor_2 = torch.tensor([1, 2, 1, 3]).cuda()
+        self.register_buffer("split_tensor_1", torch.tensor([1, 3]))
+        self.register_buffer("split_tensor_2", torch.tensor([1, 2, 1, 3]))
         self.softmax_m = nn.Softmax(dim=1)
         FENet_cfg = get_cfg_defaults()
         feat1_num, feat2_num, feat3_num, feat4_num = FENet_cfg['STAGE4']['NUM_CHANNELS']

@@ -20,6 +20,20 @@ def check_transform_lib(transform):
     else:
         return 'unknown'
 
+
+def build_transform_chain(trsf):
+    trsf = list(trsf or [])
+    if not trsf:
+        return 'none', None
+
+    libs = [check_transform_lib(transform) for transform in trsf]
+    if 'albumentations' in libs:
+        if 'torchvision' in libs:
+            raise ValueError('Cannot mix albumentations and torchvision transforms in one Arrow dataset.')
+        return 'albumentations', A.Compose(trsf)
+    return 'torchvision', transforms.Compose(trsf)
+
+
 class ArrowDatasets(Dataset):
     def __init__(self, data_root, trsf, subset, split='train'):
         self.dataroot = data_root
@@ -45,13 +59,7 @@ class ArrowDatasets(Dataset):
             self.mapping[img_full_path] = idx
 
 
-        for idx, transform in enumerate(trsf):
-            self.lib = check_transform_lib(transform)
-
-        if self.lib == 'albumentations':
-            self.transform_chain = A.Compose(trsf)
-        elif self.lib == 'torchvision':
-            self.transform_chain = transforms.Compose(trsf)
+        self.lib, self.transform_chain = build_transform_chain(trsf)
 
     def __len__(self):
         return len(self.image_pathes)
@@ -164,13 +172,7 @@ class ArrowTextImagePairDatasets(Dataset):
             # self.image_pathes.append(path)
             self.mapping[path] = idx
 
-        for idx, transform in enumerate(trsf):
-            self.lib = check_transform_lib(transform)
-
-        if self.lib == 'albumentations':
-            self.transform_chain = A.Compose(trsf)
-        elif self.lib == 'torchvision':
-            self.transform_chain = transforms.Compose(trsf)
+        self.lib, self.transform_chain = build_transform_chain(trsf)
 
     def __len__(self):
         return len(self.image_pathes)

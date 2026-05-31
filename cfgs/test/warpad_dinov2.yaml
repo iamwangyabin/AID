@@ -6,7 +6,7 @@ eval_pipeline: utils.validate_plain
 # zero-shot method, no checkpoint needed
 resume:
   path: null
-  target: torch.load
+  target: utils.resume_tools.no_resume
 
 model:
   # torch.hub dinov2 model name

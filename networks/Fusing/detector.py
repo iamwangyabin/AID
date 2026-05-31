@@ -123,7 +123,6 @@ class Patch5Model(nn.Module):
         s_whole_embedding = self.ac(self.fc1(whole_embedding))  # 128， 全局信息
         s_whole_embedding = s_whole_embedding.view(-1, 1, 128)
         # print(s_whole_embedding.shape)
-        # import pdb;pdb.set_trace()
 
         input_loc = self.COOI.get_coordinates(fm.detach(), scale)  # 获取坐标
 
@@ -165,7 +164,6 @@ class Patch5Model(nn.Module):
         # exit()
 
         return all_logits
-
 
 
 

@@ -1,4 +1,4 @@
-arch: "cnn"
+arch: "CNNDet"
 test_name: "LNP_jpgrand_progan_224"
 
 eval_pipeline: utils.validate_lnp

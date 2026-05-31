@@ -101,7 +101,7 @@ class CustomCLIP(nn.Module):
     def forward(self, image, label=None, training=False):
         logit_scale = self.logit_scale.exp()
 
-        text_features = self.embeddings.return_fixed_embeddings().cuda()
+        text_features = self.embeddings.return_fixed_embeddings().to(image.device)
         image_features = self.image_encoder(image.type(self.dtype))
 
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)

@@ -9,7 +9,6 @@ class TIMMModel(nn.Module):
     def __init__(self, name, num_classes=1):
         super(TIMMModel, self).__init__()
         self.backbone = timm.create_model(name, pretrained=True)
-        # import pdb;pdb.set_trace()
         self.backbone.reset_classifier(num_classes)
 
     def forward(self, x):
@@ -23,4 +22,3 @@ class TIMMModel(nn.Module):
         #     n
         return {'logits': self.backbone.forward_head(features),
                 'features':features}
-

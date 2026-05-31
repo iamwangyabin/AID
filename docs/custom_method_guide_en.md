@@ -1,12 +1,12 @@
 # How to Implement and Use Custom Methods in This Repository
 
-This guide explains how to add and use your own models, datasets, or post-processing functions within this repository. With the registry mechanism, you can easily extend the project's capabilities.
+This guide explains how to add and use your own models or dataset classes within this repository.
 
 ---
 
 ## 1. Implement Your Custom Method
 
-You can implement a new model, dataset class, or post-processing function. For example, define a new model:
+You can implement a new model or dataset class. For example, define a new model:
 
 ```python
 import torch.nn as nn
@@ -26,11 +26,9 @@ class MyCustomModel(nn.Module):
 
 ## 2. Register Your Custom Method
 
-The repository uses a registry system to manage models, datasets, and post-processing functions. The registries are defined in `utils/registry.py`:
+The repository uses a registry system for models. The registry is defined in `utils/registry.py`:
 
 - `MODELS`: for models
-- `DATASETS`: for datasets
-- `POSTFUNCS`: for post-processing functions
 
 You can register your method using a decorator or a function call.
 
@@ -52,7 +50,7 @@ from utils.registry import MODELS
 MODELS.register_module(module=MyCustomModel)
 ```
 
-For datasets and post-processing functions, use the corresponding `DATASETS` and `POSTFUNCS` registries.
+Dataset classes are currently referenced by dotted names such as `data.ArrowDatasets` in YAML configs.
 
 ---
 
@@ -61,14 +59,13 @@ For datasets and post-processing functions, use the corresponding `DATASETS` and
 In the YAML configuration files under the `cfgs/` directory, specify the registered name to use your custom method. For example:
 
 ```yaml
+arch: "MyCustomModel"
 model:
-  name: MyCustomModel
-  params:
-    param1: value1
-    param2: value2
+  param1: value1
+  param2: value2
 ```
 
-The training script will automatically build the corresponding instance from the registry based on the configuration.
+Add the model's import path to `MODEL_MODULE_MAP` in `utils/network_factory.py`; the imported module must register the same `arch` name in `MODELS`.
 
 ---
 
@@ -77,7 +74,7 @@ The training script will automatically build the corresponding instance from the
 After configuring the YAML file, run the training script:
 
 ```bash
-python train.py --config cfgs/your_config.yaml
+python train.py --cfg cfgs/your_config.yaml
 ```
 
 Or use the shell script:

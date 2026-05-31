@@ -110,7 +110,6 @@ class ARPromptLearner(nn.Module):
         # 这个错误，因为转换后顺序变了
         # tokenized_prompts = tokenized_prompts.view(tokenized_prompts.shape[0]*tokenized_prompts.shape[1], -1)
         tokenized_prompts = tokenized_prompts.permute(1, 0, 2).contiguous().view(tokenized_prompts.shape[0]*tokenized_prompts.shape[1], -1)
-        # import pdb;pdb.set_trace()
         self.register_buffer("token_prefix", embedding[:, :, :1, :])  # SOS
         self.register_buffer("token_suffix", embedding[:, :, 1 + n_ctx:, :])  # positive prompt CLS, EOS
         self.register_buffer("positive_token_prefix", embedding[:, :self.prompt_num, :1, :])  # SOS
@@ -139,8 +138,11 @@ class ARPromptLearner(nn.Module):
         else:
             if ctx_positive.dim() == 3:
                 diff = ctx_positive.shape[1] - ctx_negative.shape[1]
-                additional_rows = torch.zeros((ctx_negative.shape[0], diff, ctx_negative.shape[2])).cuda()
-                additional_rows = additional_rows.to(ctx_negative.dtype)
+                additional_rows = torch.zeros(
+                    (ctx_negative.shape[0], diff, ctx_negative.shape[2]),
+                    device=ctx_negative.device,
+                    dtype=ctx_negative.dtype,
+                )
                 ctx_negative = torch.cat([additional_rows, ctx_negative], dim=1)
                 ctx = torch.cat([ctx_positive, ctx_negative], dim=0)
                 ctx = ctx.unsqueeze(0).expand(self.n_cls, -1, -1, -1)
@@ -174,8 +176,11 @@ class ARPromptLearner(nn.Module):
         else:
             if ctx_positive.dim() == 3:
                 diff = ctx_positive.shape[1] - ctx_negative.shape[1]
-                additional_rows = torch.zeros((ctx_negative.shape[0], diff, ctx_negative.shape[2])).cuda()
-                additional_rows = additional_rows.to(ctx_negative.dtype)
+                additional_rows = torch.zeros(
+                    (ctx_negative.shape[0], diff, ctx_negative.shape[2]),
+                    device=ctx_negative.device,
+                    dtype=ctx_negative.dtype,
+                )
                 ctx_negative = torch.cat([additional_rows, ctx_negative], dim=1)
                 ctx = torch.cat([ctx_positive, ctx_negative], dim=0)
                 ctx = ctx.unsqueeze(0).expand(self.n_cls, -1, -1, -1)
@@ -202,7 +207,7 @@ class ARPromptLearner(nn.Module):
 
     def forward_class_name(self, classnames, token_embedding):
         classnames = [name.replace("_", " ") for name in classnames]
-        tokenized_clsnames = torch.cat([clip.tokenize(p) for p in classnames])
+        tokenized_clsnames = torch.cat([clip.tokenize(p) for p in classnames]).to(token_embedding.weight.device)
         with torch.no_grad():
             clsnames_embedding = token_embedding(tokenized_clsnames).type(self.ctx_negative.dtype)
 
@@ -216,8 +221,11 @@ class ARPromptLearner(nn.Module):
         else:
             if ctx_positive.dim() == 3:
                 diff = ctx_positive.shape[1] - ctx_negative.shape[1]
-                additional_rows = torch.zeros((ctx_negative.shape[0], diff, ctx_negative.shape[2])).cuda()
-                additional_rows = additional_rows.to(ctx_negative.dtype)
+                additional_rows = torch.zeros(
+                    (ctx_negative.shape[0], diff, ctx_negative.shape[2]),
+                    device=ctx_negative.device,
+                    dtype=ctx_negative.dtype,
+                )
                 ctx_negative = torch.cat([additional_rows, ctx_negative], dim=1)
                 ctx = torch.cat([ctx_positive, ctx_negative], dim=0)
                 ctx = ctx.unsqueeze(0).expand(self.n_cls, -1, -1, -1)
@@ -248,7 +256,7 @@ class ARPromptLearner(nn.Module):
         n_cls = len(classnames)
         classnames = [name.replace("_", " ") for name in classnames]
         name_lens = [len(_tokenizer.encode(name)) for name in classnames]
-        tokenized_clsnames = torch.cat([clip.tokenize(p) for p in classnames])
+        tokenized_clsnames = torch.cat([clip.tokenize(p) for p in classnames]).to(token_embedding.weight.device)
         with torch.no_grad():
             clsnames_embedding = token_embedding(tokenized_clsnames).type(self.ctx_negative.dtype)
 
@@ -262,8 +270,11 @@ class ARPromptLearner(nn.Module):
         else:
             if ctx_positive.dim() == 3:
                 diff = ctx_positive.shape[1] - ctx_negative.shape[1]
-                additional_rows = torch.zeros((ctx_negative.shape[0], diff, ctx_negative.shape[2])).cuda()
-                additional_rows = additional_rows.to(ctx_negative.dtype)
+                additional_rows = torch.zeros(
+                    (ctx_negative.shape[0], diff, ctx_negative.shape[2]),
+                    device=ctx_negative.device,
+                    dtype=ctx_negative.dtype,
+                )
                 ctx_negative = torch.cat([additional_rows, ctx_negative], dim=1)
                 ctx = torch.cat([ctx_positive, ctx_negative], dim=0)
                 ctx = ctx.unsqueeze(0).expand(self.n_cls, -1, -1, -1)
@@ -301,7 +312,6 @@ class PoundNet(nn.Module):
         print(f"Loading CLIP (backbone: {cfg.model.NAME})")
         clip_model = load_clip_to_cpu(cfg)
         classnames = cfg.datasets.train.multicalss_names
-        # import pdb;pdb.set_trace()
         self.prompt_learner = ARPromptLearner(cfg, classnames, clip_model)
         self.tokenized_prompts = self.prompt_learner.tokenized_prompts
         self.image_encoder = clip_model.visual
@@ -395,5 +405,3 @@ class PoundNet(nn.Module):
         logits_real = self.logit_scale.exp() * image_features @ text_features_r.t()
 
         return {'logits_fake': logits_fake, 'logits_real': logits_real}
-
-

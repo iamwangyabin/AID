@@ -1,0 +1,58 @@
+# GAPL official checkpoint evaluation.
+# Download official weights first:
+#   python tools/download_gapl_weights.py
+arch: "GAPLModel"
+test_name: "GAPL_official"
+
+eval_pipeline: utils.validate_plain
+
+resume:
+  path: "./networks/weights/gapl/checkpoint.pt"
+  target: utils.resume_tools.resume_gapl
+
+model:
+  clip_model_name_or_path: "openai/clip-vit-large-patch14"
+  local_files_only: false
+  feature_dim: 1024
+  foren_dim: 128
+  n_prototype: 64
+  num_classes: 1
+  freeze_backbone: false
+  use_lora: true
+  lora_r: 16
+  lora_alpha: 32
+  lora_dropout: 0.1
+  lora_target_modules: ["q_proj", "k_proj", "v_proj"]
+  proto_path: "./networks/weights/gapl/pca_3type_num64.pt"
+
+datasets:
+  base_path: "/path/to/DF-arrow"
+  source:
+    - { target: data.ArrowDatasets,
+        data_root: '${datasets.base_path}/DIF',
+        sub_sets: ['dalle_2', 'dalle_mini', 'glide', 'mj', 'sd14', 'sd21'],
+        split: 'test',
+        benchmark_name: 'DIF' }
+    - { target: data.ArrowDatasets,
+        data_root: '${datasets.base_path}/DiffusionForensics',
+        sub_sets: ['lsun_bedroom_adm', 'lsun_bedroom_iddpm', 'lsun_bedroom_ddpm', 'lsun_bedroom_pndm',
+                   'lsun_bedroom_sdv2', 'lsun_bedroom_ldm', 'lsun_bedroom_vqdiffusion', 'lsun_bedroom_if',
+                   'lsun_bedroom_dalle2', 'lsun_bedroom_midjourney'],
+        split: 'test',
+        benchmark_name: 'DiffusionForensics' }
+    - { target: data.BinaryJsonDatasets,
+        data_root: '/path/to/DFBenchmark/synthbuster',
+        sub_sets: ['dalle2', 'firefly', 'stable-diffusion-1-4', 'stable-diffusion-xl', 'dalle3', 'glide',
+                   'midjourney-v5', 'stable-diffusion-1-3', 'stable-diffusion-2'],
+        split: 'test',
+        benchmark_name: 'Synthbuster' }
+
+  batch_size: 64
+  loader_workers: 8
+  trsf:
+    - _target_: torchvision.transforms.CenterCrop
+      size: 224
+    - _target_: torchvision.transforms.ToTensor
+    - _target_: torchvision.transforms.Normalize
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]
