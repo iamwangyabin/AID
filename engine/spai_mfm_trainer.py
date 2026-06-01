@@ -43,9 +43,3 @@ class Trainer_SPAIMFM(BaseTrainerModule):
     def clear_validation_outputs(self):
         super().clear_validation_outputs()
         self.validation_step_outputs_losses.clear()
-
-    def configure_optimizers(self):
-        optparams = filter(lambda p: p.requires_grad, self.parameters())
-        optimizer = self.opt.train.optimizer(optparams)
-        scheduler = self.opt.train.scheduler(optimizer)
-        return [optimizer], [scheduler]

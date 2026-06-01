@@ -45,9 +45,3 @@ class Trainer_VIBNet(BaseTrainerModule):
         self.log("val_facc_epoch", f_acc, logger=True, sync_dist=True)
         self.validation_step_outputs_preds.clear()
         self.validation_step_outputs_gts.clear()
-
-    def configure_optimizers(self):
-        optparams = filter(lambda p: p.requires_grad, self.parameters())
-        optimizer = self.opt.train.optimizer(optparams)
-        scheduler = self.opt.train.scheduler(optimizer)
-        return [optimizer], [scheduler]

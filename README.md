@@ -143,7 +143,6 @@ AID/
 ├── engine/           # Training engine modules
 ├── networks/         # Model architectures
 ├── tools/            # Utility scripts
-├── legacy/           # Archived old configs, scripts, and dataset recipes
 ├── train.py          # Training script
 ├── test.py           # Testing script
 ├── train.sh          # training shell template
